@@ -3,13 +3,13 @@ import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 const chartConfig = {
-  temperature: {
+  value: {
     label: 'Temp Anomaly',
     color: 'hsl(var(--accent))',
   },
 } satisfies ChartConfig;
 
-export function TemperatureChart({ data, regionKey }: { data: any[], regionKey: string }) {
+export function TemperatureChart({ data }: { data: any[] }) {
   return (
     <ChartContainer config={chartConfig} className="h-[250px] w-full">
       <LineChart
@@ -36,9 +36,9 @@ export function TemperatureChart({ data, regionKey }: { data: any[], regionKey: 
           content={<ChartTooltipContent indicator="line" labelFormatter={(label, payload) => `${payload[0]?.payload?.year}: ${payload[0]?.value}°C`}/>}
         />
         <Line
-          dataKey={regionKey}
+          dataKey="value"
           type="monotone"
-          stroke="var(--color-temperature)"
+          stroke="var(--color-value)"
           strokeWidth={2}
           dot={true}
           name="Temp Anomaly"

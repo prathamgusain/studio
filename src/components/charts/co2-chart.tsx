@@ -3,14 +3,14 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 const chartConfig = {
-  co2: {
+  value: {
     label: 'CO₂ (ppm)',
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
 
 
-export function CO2Chart({ data, regionKey }: { data: any[], regionKey: string }) {
+export function CO2Chart({ data }: { data: any[] }) {
   return (
     <ChartContainer config={chartConfig} className="h-[250px] w-full">
       <BarChart 
@@ -37,7 +37,7 @@ export function CO2Chart({ data, regionKey }: { data: any[], regionKey: string }
           cursor={false}
           content={<ChartTooltipContent indicator="dot" labelFormatter={(label, payload) => `${payload[0]?.payload?.year}: ${payload[0]?.value} ppm`}/>}
         />
-        <Bar dataKey={regionKey} fill="var(--color-co2)" radius={4} name="CO₂ (ppm)" />
+        <Bar dataKey="value" fill="var(--color-value)" radius={4} name="CO₂ (ppm)" />
       </BarChart>
     </ChartContainer>
   );
