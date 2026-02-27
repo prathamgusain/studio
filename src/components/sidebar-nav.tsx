@@ -27,7 +27,7 @@ import { Droplets, Download, Upload, BarChart, Database } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
-import { AiInsightsPanel } from './ai-insights-panel';
+import { DataSummaryPanel } from './data-summary-panel';
 import { useToast } from '@/hooks/use-toast';
 
 interface SidebarNavProps {
@@ -241,7 +241,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
           </div>
         </SidebarGroup>
         <SidebarSeparator className="my-4" />
-        <AiInsightsPanel filters={filters} />
+        <DataSummaryPanel />
         <SidebarSeparator className="my-4" />
          <SidebarGroup>
           <SidebarGroupLabel>Manual Data Upload</SidebarGroupLabel>
