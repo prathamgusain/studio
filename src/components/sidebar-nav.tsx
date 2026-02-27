@@ -22,7 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon, Droplets, Download, Upload } from 'lucide-react';
 import { format } from 'date-fns';
-import type { FilterState } from '@/app/page';
+import type { FilterState } from '@/app/dashboard/page';
 import type { Dispatch, SetStateAction } from 'react';
 import { AiInsightsPanel } from './ai-insights-panel';
 import { useToast } from '@/hooks/use-toast';
