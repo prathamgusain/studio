@@ -4,8 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -24,15 +23,12 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon, Droplets, Download, Upload, BarChart, Database } from 'lucide-react';
-import { format } from 'date-fns';
+import { Droplets, Download, Upload, BarChart, Database } from 'lucide-react';
+import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
 import { AiInsightsPanel } from './ai-insights-panel';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { DateRange } from 'react-day-picker';
 
 interface SidebarNavProps {
   filters: FilterState;
@@ -47,13 +43,22 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2' | 'sea-level'>('temperature');
-  const [isClient, setIsClient] = useState(false);
-  const [maxDate, setMaxDate] = useState<Date | null>(null);
+
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   useEffect(() => {
-    setIsClient(true);
-    setMaxDate(new Date());
-  }, []);
+    if (filters.dateRange?.from) {
+      setFromDate(format(filters.dateRange.from, 'dd-MM-yyyy'));
+    } else {
+      setFromDate('');
+    }
+    if (filters.dateRange?.to) {
+      setToDate(format(filters.dateRange.to, 'dd-MM-yyyy'));
+    } else {
+      setToDate('');
+    }
+  }, [filters.dateRange]);
 
   const handlePrint = () => {
     window.print();
@@ -122,22 +127,36 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
     }
   };
 
-  const handleFromDateSelect = (date: Date | undefined) => {
-    setFilters((prev) => {
-      const newRange: DateRange = { from: date, to: prev.dateRange?.to };
-      if (date && prev.dateRange?.to && date > prev.dateRange.to) {
-        newRange.to = date;
-      }
-      return { ...prev, dateRange: newRange };
-    });
-  };
+  const handleDateChange = (value: string, type: 'from' | 'to') => {
+    if (type === 'from') {
+      setFromDate(value);
+    } else {
+      setToDate(value);
+    }
 
-  const handleToDateSelect = (date: Date | undefined) => {
-    setFilters((prev) => ({
-      ...prev,
-      dateRange: { from: prev.dateRange?.from, to: date },
-    }));
-  };
+    if (value.match(/^\d{2}-\d{2}-\d{4}$/)) {
+        const parsedDate = parse(value, 'dd-MM-yyyy', new Date());
+        if (isValid(parsedDate)) {
+            setFilters((prev) => {
+                const newRange = { ...prev.dateRange, [type]: parsedDate };
+                if (type === 'from' && newRange.to && parsedDate > newRange.to) {
+                    newRange.to = parsedDate;
+                    setToDate(format(parsedDate, 'dd-MM-yyyy'));
+                }
+                 if (type === 'to' && newRange.from && parsedDate < newRange.from) {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Invalid Date Range',
+                        description: '"To" date cannot be earlier than "From" date.',
+                    });
+                    return prev;
+                }
+                return { ...prev, dateRange: {from: newRange.from, to: newRange.to} };
+            });
+        }
+    }
+  }
+
 
   return (
     <>
@@ -194,83 +213,29 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">
                 Date Range
               </label>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="date-from"
-                      variant={'outline'}
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !filters.dateRange?.from && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.dateRange?.from ? (
-                        format(filters.dateRange.from, 'LLL dd, y')
-                      ) : (
-                        <span>From date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    {isClient ? (
-                      <Calendar
-                        mode="single"
-                        selected={filters.dateRange?.from}
-                        onSelect={handleFromDateSelect}
-                        disabled={(date) =>
-                          (maxDate && date > maxDate) || date < new Date('2000-01-01')
-                        }
-                        initialFocus
-                      />
-                    ) : (
-                      <div className="p-3">
-                        <Skeleton className="h-[298px] w-[284px]" />
-                      </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="date-to"
-                      variant={'outline'}
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !filters.dateRange?.to && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.dateRange?.to ? (
-                        format(filters.dateRange.to, 'LLL dd, y')
-                      ) : (
-                        <span>To date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    {isClient ? (
-                      <Calendar
-                        mode="single"
-                        selected={filters.dateRange?.to}
-                        onSelect={handleToDateSelect}
-                        disabled={(date) =>
-                          (maxDate && date > maxDate) || date < (filters.dateRange?.from || new Date('2000-01-01'))
-                        }
-                        initialFocus
-                      />
-                    ) : (
-                      <div className="p-3">
-                        <Skeleton className="h-[298px] w-[284px]" />
-                      </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
+                <div>
+                  <Input
+                    id="date-from"
+                    placeholder="dd-mm-yyyy"
+                    value={fromDate}
+                    onChange={(e) => handleDateChange(e.target.value, 'from')}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">From date</p>
+                </div>
+                 <div>
+                  <Input
+                    id="date-to"
+                    placeholder="dd-mm-yyyy"
+                    value={toDate}
+                    onChange={(e) => handleDateChange(e.target.value, 'to')}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">To date</p>
+                </div>
               </div>
             </div>
           </div>
