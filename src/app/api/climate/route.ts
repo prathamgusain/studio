@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { temperatureData, co2Data, seaLevelData } from '@/lib/data';
+import { temperatureData, co2Data, seaLevelData, arcticIceData, extremeWeatherEventsData } from '@/lib/data';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,6 +15,10 @@ export async function GET(request: Request) {
     sourceData = co2Data;
   } else if (dataType === 'sea-level') {
     sourceData = seaLevelData;
+  } else if (dataType === 'arctic-ice') {
+    sourceData = arcticIceData;
+  } else if (dataType === 'extreme-weather') {
+    sourceData = extremeWeatherEventsData;
   } else {
     return NextResponse.json({ error: 'Invalid data type' }, { status: 400 });
   }

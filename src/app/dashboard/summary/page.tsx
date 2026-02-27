@@ -92,14 +92,16 @@ const SummaryDisplayCard: React.FC<{ title: string; data: DataPoint[]; unit: str
 };
 
 export default function SummaryPage() {
-  const { filters, tempData, co2Data, seaLevelData, loading } = useDashboard();
+  const { filters, tempData, co2Data, seaLevelData, arcticIceData, extremeWeatherEventsData, loading } = useDashboard();
   const fromYear = filters.dateRange?.from?.getFullYear();
   const toYear = filters.dateRange?.to?.getFullYear();
   
   const descriptions = {
     temp: `Summary of temperature anomaly data for ${filters.region} from ${fromYear} to ${toYear}.`,
     co2: `Summary of atmospheric CO₂ data for ${filters.region} from ${fromYear} to ${toYear}.`,
-    seaLevel: `Summary of sea level rise data for ${filters.region} from ${fromYear} to ${toYear}.`
+    seaLevel: `Summary of sea level rise data for ${filters.region} from ${fromYear} to ${toYear}.`,
+    arcticIce: `Summary of Arctic ice extent data for ${filters.region} from ${fromYear} to ${toYear}.`,
+    extremeWeather: `Summary of extreme weather events data for ${filters.region} from ${fromYear} to ${toYear}.`
   }
 
   return (
@@ -116,12 +118,16 @@ export default function SummaryPage() {
                 <Skeleton className="h-[180px] w-full" />
                 <Skeleton className="h-[180px] w-full" />
                 <Skeleton className="h-[180px] w-full" />
+                <Skeleton className="h-[180px] w-full" />
+                <Skeleton className="h-[180px] w-full" />
               </>
             ) : (
               <>
                 <SummaryDisplayCard title="Temperature" data={tempData} unit="°C" description={descriptions.temp} />
                 <SummaryDisplayCard title="CO₂ Levels" data={co2Data} unit="ppm" description={descriptions.co2} />
                 <SummaryDisplayCard title="Sea Level Rise" data={seaLevelData} unit="mm" description={descriptions.seaLevel} />
+                <SummaryDisplayCard title="Arctic Ice Extent" data={arcticIceData} unit="M km²" description={descriptions.arcticIce} />
+                <SummaryDisplayCard title="Extreme Weather Events" data={extremeWeatherEventsData} unit="events" description={descriptions.extremeWeather} />
               </>
             )}
            </div>

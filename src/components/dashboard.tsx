@@ -9,16 +9,20 @@ import { precipitationData } from '@/lib/data';
 import { Header } from './header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SeaLevelChart } from './charts/sea-level-chart';
+import { ArcticIceChart } from './charts/arctic-ice-chart';
+import { ExtremeWeatherChart } from './charts/extreme-weather-chart';
 
 interface DashboardProps {
   filters: FilterState;
   tempData: any[];
   co2Data: any[];
   seaLevelData: any[];
+  arcticIceData: any[];
+  extremeWeatherEventsData: any[];
   loading: boolean;
 }
 
-export function Dashboard({ filters, tempData, co2Data, seaLevelData, loading }: DashboardProps) {
+export function Dashboard({ filters, tempData, co2Data, seaLevelData, arcticIceData, extremeWeatherEventsData, loading }: DashboardProps) {
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4 no-print">
@@ -81,6 +85,36 @@ export function Dashboard({ filters, tempData, co2Data, seaLevelData, loading }:
               </CardHeader>
               <CardContent className="pb-4">
                 <PrecipitationChart data={precipitationData} />
+              </CardContent>
+            </Card>
+            <Card className="sm:col-span-2 print-chart-wrapper" x-chunk="dashboard-05-chunk-4">
+              <CardHeader className="pb-2">
+                <CardTitle>Arctic Ice Extent</CardTitle>
+                <CardDescription className="max-w-lg text-balance leading-relaxed">
+                  Yearly minimum Arctic sea ice extent (million km²) for {filters.region}.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                    <Skeleton className="h-[250px] w-full" />
+                ) : (
+                    <ArcticIceChart data={arcticIceData} />
+                )}
+              </CardContent>
+            </Card>
+            <Card className="sm:col-span-2 print-chart-wrapper" x-chunk="dashboard-05-chunk-5">
+              <CardHeader className="pb-2">
+                <CardTitle>Extreme Weather Events</CardTitle>
+                <CardDescription className="max-w-lg text-balance leading-relaxed">
+                  Count of significant extreme weather events for {filters.region}.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                    <Skeleton className="h-[250px] w-full" />
+                ) : (
+                    <ExtremeWeatherChart data={extremeWeatherEventsData} />
+                )}
               </CardContent>
             </Card>
           </div>

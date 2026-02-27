@@ -28,11 +28,12 @@ import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { AiInsightsPanel } from './ai-insights-panel';
 
 interface SidebarNavProps {
   filters: FilterState;
   setFilters: Dispatch<SetStateAction<FilterState>>;
-  onDataUpload: (data: any[], dataType: 'temperature' | 'co2' | 'sea-level') => void;
+  onDataUpload: (data: any[], dataType: 'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather') => void;
 }
 
 const regions = ['Global', 'North America', 'Europe', 'Asia', 'South America', 'Africa', 'Oceania'];
@@ -41,7 +42,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
   const pathname = usePathname();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2' | 'sea-level'>('temperature');
+  const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather'>('temperature');
 
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -259,7 +260,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
               </label>
               <Select
                 value={uploadDataType}
-                onValueChange={(value: 'temperature' | 'co2' | 'sea-level') => setUploadDataType(value)}
+                onValueChange={(value: 'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather') => setUploadDataType(value)}
               >
                 <SelectTrigger id="data-type-select" className="w-full">
                   <SelectValue placeholder="Select data type" />
@@ -268,6 +269,8 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                   <SelectItem value="temperature">Temperature</SelectItem>
                   <SelectItem value="co2">CO₂</SelectItem>
                   <SelectItem value="sea-level">Sea Level</SelectItem>
+                  <SelectItem value="arctic-ice">Arctic Ice Extent</SelectItem>
+                  <SelectItem value="extreme-weather">Extreme Weather</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -287,6 +290,8 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
             </p>
           </div>
         </SidebarGroup>
+        <SidebarSeparator className="my-4" />
+        <AiInsightsPanel filters={filters} />
       </SidebarContent>
       <SidebarFooter>
          <Button onClick={handlePrint} className="w-full" variant="outline">

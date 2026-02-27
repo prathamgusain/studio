@@ -22,6 +22,8 @@ interface DashboardContextType {
     tempData: any[];
     co2Data: any[];
     seaLevelData: any[];
+    arcticIceData: any[];
+    extremeWeatherEventsData: any[];
     loading: boolean;
 }
 
@@ -64,6 +66,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [tempData, setTempData] = useState<any[]>([]);
   const [co2Data, setCo2Data] = useState<any[]>([]);
   const [seaLevelData, setSeaLevelData] = useState<any[]>([]);
+  const [arcticIceData, setArcticIceData] = useState<any[]>([]);
+  const [extremeWeatherEventsData, setExtremeWeatherEventsData] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -80,23 +84,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       const region = filters.region;
       
       try {
-        const [tempRes, co2Res, seaLevelRes] = await Promise.all([
+        const [tempRes, co2Res, seaLevelRes, arcticIceRes, extremeWeatherRes] = await Promise.all([
           fetch(`/api/climate?type=temperature&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
           fetch(`/api/climate?type=co2&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
           fetch(`/api/climate?type=sea-level&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
+          fetch(`/api/climate?type=arctic-ice&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
+          fetch(`/api/climate?type=extreme-weather&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
         ]);
         
-        if (!tempRes.ok || !co2Res.ok || !seaLevelRes.ok) {
+        if (!tempRes.ok || !co2Res.ok || !seaLevelRes.ok || !arcticIceRes.ok || !extremeWeatherRes.ok) {
             throw new Error('Failed to fetch climate data');
         }
 
         const tempDataJson = await tempRes.json();
         const co2DataJson = await co2Res.json();
         const seaLevelDataJson = await seaLevelRes.json();
+        const arcticIceDataJson = await arcticIceRes.json();
+        const extremeWeatherEventsDataJson = await extremeWeatherRes.json();
         
         setTempData(tempDataJson);
         setCo2Data(co2DataJson);
         setSeaLevelData(seaLevelDataJson);
+        setArcticIceData(arcticIceDataJson);
+        setExtremeWeatherEventsData(extremeWeatherEventsDataJson);
       } catch (error) {
         console.error("Failed to fetch climate data", error);
         toast({
@@ -112,11 +122,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     fetchData();
   }, [filters, toast, user]);
 
-  const handleDataUpload = (data: any[], dataType: 'temperature' | 'co2' | 'sea-level') => {
+  const handleDataUpload = (data: any[], dataType: 'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather') => {
     if (dataType === 'temperature') {
       setTempData(data);
     } else if (dataType === 'co2') {
       setCo2Data(data);
+    } else if (dataType === 'arctic-ice') {
+      setArcticIceData(data);
+    } else if (dataType === 'extreme-weather') {
+      setExtremeWeatherEventsData(data);
     } else {
       setSeaLevelData(data);
     }
@@ -139,6 +153,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       tempData,
       co2Data,
       seaLevelData,
+      arcticIceData,
+      extremeWeatherEventsData,
       loading
   };
 

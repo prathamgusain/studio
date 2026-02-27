@@ -9,7 +9,7 @@ import { PrecipitationDataTable } from '@/components/precipitation-data-table';
 import { precipitationData } from '@/lib/data';
 
 export default function DatasetsPage() {
-  const { filters, tempData, co2Data, seaLevelData, loading } = useDashboard();
+  const { filters, tempData, co2Data, seaLevelData, arcticIceData, extremeWeatherEventsData, loading } = useDashboard();
   const fromYear = filters.dateRange?.from?.getFullYear();
   const toYear = filters.dateRange?.to?.getFullYear();
 
@@ -70,6 +70,32 @@ export default function DatasetsPage() {
                 </CardHeader>
                 <CardContent>
                   <PrecipitationDataTable data={precipitationData} caption="Global precipitation event percentages." />
+                </CardContent>
+              </Card>
+              <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-8">
+                <CardHeader className="pb-2">
+                  <CardTitle>Arctic Ice Extent</CardTitle>
+                  <CardDescription>For {filters.region} from {fromYear} to {toYear}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                      <Skeleton className="h-[250px] w-full" />
+                  ) : (
+                      <DataTable data={arcticIceData} caption="Minimum Arctic sea ice extent (million km²)." />
+                  )}
+                </CardContent>
+              </Card>
+              <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-9">
+                <CardHeader className="pb-2">
+                  <CardTitle>Extreme Weather Events</CardTitle>
+                  <CardDescription>For {filters.region} from {fromYear} to {toYear}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                      <Skeleton className="h-[250px] w-full" />
+                  ) : (
+                      <DataTable data={extremeWeatherEventsData} caption="Count of extreme weather events." />
+                  )}
                 </CardContent>
               </Card>
            </div>
