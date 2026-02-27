@@ -1,8 +1,7 @@
 'use client';
 
 import { SidebarTrigger } from './ui/sidebar';
-import { useUser, useAuth } from '@/firebase';
-import { initiateSignOut } from '@/firebase/non-blocking-login';
+import { useUser, useAuth, initiateSignOut } from '@/firebase';
 import { Button } from './ui/button';
 import {
   DropdownMenu,

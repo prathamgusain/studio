@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,11 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Droplets, LogIn, Loader2 } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
-import {
-  initiateEmailSignIn,
-  initiateEmailSignUp,
-} from '@/firebase/non-blocking-login';
+import { useAuth, useUser, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {

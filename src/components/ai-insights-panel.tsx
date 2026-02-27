@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import { Badge } from './ui/badge';
 import { SidebarGroup, SidebarGroupLabel } from './ui/sidebar';
-import type { FilterState } from '@/app/dashboard/page';
+import type { FilterState } from '@/app/dashboard/layout';
 
 interface AiInsightsPanelProps {
   filters: FilterState;
