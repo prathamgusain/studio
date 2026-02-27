@@ -19,11 +19,18 @@ export type FilterState = {
 export default function Home() {
   const [filters, setFilters] = useState<FilterState>({
     region: 'Global',
-    dateRange: {
-      from: new Date(new Date().setFullYear(new Date().getFullYear() - 20)),
-      to: new Date(),
-    },
+    dateRange: undefined,
   });
+
+  useEffect(() => {
+    setFilters(prev => ({
+        ...prev,
+        dateRange: {
+            from: new Date(new Date().setFullYear(new Date().getFullYear() - 20)),
+            to: new Date(),
+        },
+    }));
+  }, []);
   
   const [loading, setLoading] = useState(true);
   const [tempData, setTempData] = useState<any[]>([]);

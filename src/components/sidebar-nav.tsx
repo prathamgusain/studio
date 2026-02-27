@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -26,6 +26,7 @@ import type { FilterState } from '@/app/page';
 import type { Dispatch, SetStateAction } from 'react';
 import { AiInsightsPanel } from './ai-insights-panel';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SidebarNavProps {
   filters: FilterState;
@@ -39,6 +40,11 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2'>('temperature');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handlePrint = () => {
     window.print();
@@ -169,17 +175,23 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    selected={filters.dateRange}
-                    onSelect={(range) => setFilters((prev) => ({ ...prev, dateRange: range }))}
-                    initialFocus
-                    numberOfMonths={1}
-                    defaultMonth={filters.dateRange?.from}
-                    disabled={(date) =>
-                        date > new Date() || date < new Date("2000-01-01")
-                    }
-                  />
+                  {isClient ? (
+                    <Calendar
+                      mode="range"
+                      selected={filters.dateRange}
+                      onSelect={(range) => setFilters((prev) => ({ ...prev, dateRange: range }))}
+                      initialFocus
+                      numberOfMonths={1}
+                      defaultMonth={filters.dateRange?.from}
+                      disabled={(date) =>
+                          date > new Date() || date < new Date("2000-01-01")
+                      }
+                    />
+                  ) : (
+                    <div className="p-3">
+                      <Skeleton className="h-[298px] w-[284px]" />
+                    </div>
+                  )}
                 </PopoverContent>
               </Popover>
             </div>
