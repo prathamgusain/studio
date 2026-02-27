@@ -27,6 +27,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { AiInsightsPanel } from './ai-insights-panel';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { DateRange } from 'react-day-picker';
 
 interface SidebarNavProps {
   filters: FilterState;
@@ -113,6 +114,23 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
     }
   };
 
+  const handleFromDateSelect = (date: Date | undefined) => {
+    setFilters((prev) => {
+      const newRange: DateRange = { from: date, to: prev.dateRange?.to };
+      if (date && prev.dateRange?.to && date > prev.dateRange.to) {
+        newRange.to = date;
+      }
+      return { ...prev, dateRange: newRange };
+    });
+  };
+
+  const handleToDateSelect = (date: Date | undefined) => {
+    setFilters((prev) => ({
+      ...prev,
+      dateRange: { from: prev.dateRange?.from, to: date },
+    }));
+  };
+
   return (
     <>
       <SidebarHeader>
@@ -146,54 +164,83 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
               </Select>
             </div>
             <div>
-              <label htmlFor="date-range-picker" className="text-sm font-medium text-muted-foreground">
+              <label className="text-sm font-medium text-muted-foreground">
                 Date Range
               </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="date-range-picker"
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !filters.dateRange && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.dateRange?.from ? (
-                      filters.dateRange.to ? (
-                        <>
-                          {format(filters.dateRange.from, 'LLL dd, y')} -{' '}
-                          {format(filters.dateRange.to, 'LLL dd, y')}
-                        </>
-                      ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="date-from"
+                      variant={'outline'}
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !filters.dateRange?.from && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.dateRange?.from ? (
                         format(filters.dateRange.from, 'LLL dd, y')
-                      )
+                      ) : (
+                        <span>From date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    {isClient ? (
+                      <Calendar
+                        mode="single"
+                        selected={filters.dateRange?.from}
+                        onSelect={handleFromDateSelect}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date('2000-01-01')
+                        }
+                        initialFocus
+                      />
                     ) : (
-                      <span>Pick a date range</span>
+                      <div className="p-3">
+                        <Skeleton className="h-[298px] w-[284px]" />
+                      </div>
                     )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  {isClient ? (
-                    <Calendar
-                      mode="range"
-                      selected={filters.dateRange}
-                      onSelect={(range) => setFilters((prev) => ({ ...prev, dateRange: range }))}
-                      initialFocus
-                      numberOfMonths={1}
-                      defaultMonth={filters.dateRange?.from}
-                      disabled={(date) =>
-                          date > new Date() || date < new Date("2000-01-01")
-                      }
-                    />
-                  ) : (
-                    <div className="p-3">
-                      <Skeleton className="h-[298px] w-[284px]" />
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="date-to"
+                      variant={'outline'}
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !filters.dateRange?.to && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.dateRange?.to ? (
+                        format(filters.dateRange.to, 'LLL dd, y')
+                      ) : (
+                        <span>To date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    {isClient ? (
+                      <Calendar
+                        mode="single"
+                        selected={filters.dateRange?.to}
+                        onSelect={handleToDateSelect}
+                        disabled={(date) =>
+                          date < (filters.dateRange?.from || new Date('2000-01-01')) || date > new Date()
+                        }
+                        initialFocus
+                      />
+                    ) : (
+                      <div className="p-3">
+                        <Skeleton className="h-[298px] w-[284px]" />
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </div>
         </SidebarGroup>
