@@ -10,6 +10,8 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export type FilterState = {
   region: string;
@@ -17,10 +19,19 @@ export type FilterState = {
 };
 
 export default function Home() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
   const [filters, setFilters] = useState<FilterState>({
     region: 'Global',
     dateRange: undefined,
   });
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   useEffect(() => {
     setFilters(prev => ({
@@ -39,6 +50,7 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!user) return;
     async function fetchData() {
       if (!filters.dateRange?.from || !filters.dateRange?.to) {
         return;
@@ -81,7 +93,7 @@ export default function Home() {
     }
     
     fetchData();
-  }, [filters, toast]);
+  }, [filters, toast, user]);
 
   const handleDataUpload = (data: any[], dataType: 'temperature' | 'co2' | 'sea-level') => {
     if (dataType === 'temperature') {
@@ -96,6 +108,14 @@ export default function Home() {
         description: `The ${dataType} chart has been updated. To see API data again, please change the filters.`,
     });
   };
+
+  if (isUserLoading || !user) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <p>Loading...</p>
+        </div>
+    );
+  }
 
 
   return (
