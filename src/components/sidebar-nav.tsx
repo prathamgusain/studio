@@ -32,7 +32,7 @@ import type { DateRange } from 'react-day-picker';
 interface SidebarNavProps {
   filters: FilterState;
   setFilters: Dispatch<SetStateAction<FilterState>>;
-  onDataUpload: (data: any[], dataType: 'temperature' | 'co2') => void;
+  onDataUpload: (data: any[], dataType: 'temperature' | 'co2' | 'sea-level') => void;
 }
 
 const regions = ['Global', 'North America', 'Europe', 'Asia', 'South America', 'Africa', 'Oceania'];
@@ -40,7 +40,7 @@ const regions = ['Global', 'North America', 'Europe', 'Asia', 'South America', '
 export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2'>('temperature');
+  const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2' | 'sea-level'>('temperature');
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -256,7 +256,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
               </label>
               <Select
                 value={uploadDataType}
-                onValueChange={(value: 'temperature' | 'co2') => setUploadDataType(value)}
+                onValueChange={(value: 'temperature' | 'co2' | 'sea-level') => setUploadDataType(value)}
               >
                 <SelectTrigger id="data-type-select" className="w-full">
                   <SelectValue placeholder="Select data type" />
@@ -264,6 +264,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 <SelectContent>
                   <SelectItem value="temperature">Temperature</SelectItem>
                   <SelectItem value="co2">CO₂</SelectItem>
+                  <SelectItem value="sea-level">Sea Level</SelectItem>
                 </SelectContent>
               </Select>
             </div>

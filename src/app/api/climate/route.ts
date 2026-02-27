@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { temperatureData, co2Data } from '@/lib/data';
+import { temperatureData, co2Data, seaLevelData } from '@/lib/data';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,6 +13,8 @@ export async function GET(request: Request) {
     sourceData = temperatureData;
   } else if (dataType === 'co2') {
     sourceData = co2Data;
+  } else if (dataType === 'sea-level') {
+    sourceData = seaLevelData;
   } else {
     return NextResponse.json({ error: 'Invalid data type' }, { status: 400 });
   }

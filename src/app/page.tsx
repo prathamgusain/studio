@@ -35,6 +35,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [tempData, setTempData] = useState<any[]>([]);
   const [co2Data, setCo2Data] = useState<any[]>([]);
+  const [seaLevelData, setSeaLevelData] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,20 +51,23 @@ export default function Home() {
       const region = filters.region;
       
       try {
-        const [tempRes, co2Res] = await Promise.all([
+        const [tempRes, co2Res, seaLevelRes] = await Promise.all([
           fetch(`/api/climate?type=temperature&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
           fetch(`/api/climate?type=co2&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
+          fetch(`/api/climate?type=sea-level&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
         ]);
         
-        if (!tempRes.ok || !co2Res.ok) {
+        if (!tempRes.ok || !co2Res.ok || !seaLevelRes.ok) {
             throw new Error('Failed to fetch climate data');
         }
 
         const tempDataJson = await tempRes.json();
         const co2DataJson = await co2Res.json();
+        const seaLevelDataJson = await seaLevelRes.json();
         
         setTempData(tempDataJson);
         setCo2Data(co2DataJson);
+        setSeaLevelData(seaLevelDataJson);
       } catch (error) {
         console.error("Failed to fetch climate data", error);
         toast({
@@ -79,11 +83,13 @@ export default function Home() {
     fetchData();
   }, [filters, toast]);
 
-  const handleDataUpload = (data: any[], dataType: 'temperature' | 'co2') => {
+  const handleDataUpload = (data: any[], dataType: 'temperature' | 'co2' | 'sea-level') => {
     if (dataType === 'temperature') {
       setTempData(data);
-    } else {
+    } else if (dataType === 'co2') {
       setCo2Data(data);
+    } else {
+      setSeaLevelData(data);
     }
     toast({
         title: 'Data uploaded successfully',
@@ -99,7 +105,7 @@ export default function Home() {
           <SidebarNav filters={filters} setFilters={setFilters} onDataUpload={handleDataUpload} />
         </Sidebar>
         <SidebarInset className="print-container">
-          <Dashboard filters={filters} tempData={tempData} co2Data={co2Data} loading={loading} />
+          <Dashboard filters={filters} tempData={tempData} co2Data={co2Data} seaLevelData={seaLevelData} loading={loading} />
         </SidebarInset>
       </div>
     </SidebarProvider>

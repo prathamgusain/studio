@@ -8,15 +8,17 @@ import { PrecipitationChart } from './charts/precipitation-chart';
 import { precipitationData } from '@/lib/data';
 import { Header } from './header';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SeaLevelChart } from './charts/sea-level-chart';
 
 interface DashboardProps {
   filters: FilterState;
   tempData: any[];
   co2Data: any[];
+  seaLevelData: any[];
   loading: boolean;
 }
 
-export function Dashboard({ filters, tempData, co2Data, loading }: DashboardProps) {
+export function Dashboard({ filters, tempData, co2Data, seaLevelData, loading }: DashboardProps) {
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4 no-print">
@@ -55,7 +57,22 @@ export function Dashboard({ filters, tempData, co2Data, loading }: DashboardProp
                 )}
               </CardContent>
             </Card>
-            <Card className="sm:col-span-4 print-chart-wrapper" x-chunk="dashboard-05-chunk-2">
+            <Card className="sm:col-span-2 print-chart-wrapper" x-chunk="dashboard-05-chunk-2">
+              <CardHeader className="pb-2">
+                <CardTitle>Sea Level Rise</CardTitle>
+                <CardDescription className="max-w-lg text-balance leading-relaxed">
+                  Yearly sea level variation (mm) for {filters.region} relative to the 20-year average.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-[250px] w-full" />
+                ) : (
+                  <SeaLevelChart data={seaLevelData} />
+                )}
+              </CardContent>
+            </Card>
+            <Card className="sm:col-span-2 print-chart-wrapper" x-chunk="dashboard-05-chunk-3">
               <CardHeader className="items-center pb-2">
                 <CardTitle>Global Precipitation Events</CardTitle>
                 <CardDescription>
