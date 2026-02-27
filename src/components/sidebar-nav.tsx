@@ -48,9 +48,11 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2' | 'sea-level'>('temperature');
   const [isClient, setIsClient] = useState(false);
+  const [maxDate, setMaxDate] = useState<Date | null>(null);
 
   useEffect(() => {
     setIsClient(true);
+    setMaxDate(new Date());
   }, []);
 
   const handlePrint = () => {
@@ -222,7 +224,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                         selected={filters.dateRange?.from}
                         onSelect={handleFromDateSelect}
                         disabled={(date) =>
-                          date > new Date() || date < new Date('2000-01-01')
+                          (maxDate && date > maxDate) || date < new Date('2000-01-01')
                         }
                         initialFocus
                       />
@@ -258,7 +260,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                         selected={filters.dateRange?.to}
                         onSelect={handleToDateSelect}
                         disabled={(date) =>
-                          date < (filters.dateRange?.from || new Date('2000-01-01')) || date > new Date()
+                          (maxDate && date > maxDate) || date < (filters.dateRange?.from || new Date('2000-01-01'))
                         }
                         initialFocus
                       />
