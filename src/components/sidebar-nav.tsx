@@ -23,11 +23,10 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Droplets, Download, Upload, BarChart, Database } from 'lucide-react';
+import { Droplets, Download, Upload, BarChart, Database, Info } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
-import { DataSummaryPanel } from './data-summary-panel';
 import { useToast } from '@/hooks/use-toast';
 
 interface SidebarNavProps {
@@ -188,6 +187,16 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                     </SidebarMenuButton>
                 </Link>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/dashboard/summary" legacyBehavior passHref>
+                    <SidebarMenuButton asChild isActive={pathname === '/dashboard/summary'}>
+                        <a>
+                            <Info />
+                            <span>Data Summary</span>
+                        </a>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
         </SidebarMenu>
         <SidebarSeparator className="my-4" />
         <SidebarGroup>
@@ -240,8 +249,6 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
             </div>
           </div>
         </SidebarGroup>
-        <SidebarSeparator className="my-4" />
-        <DataSummaryPanel />
         <SidebarSeparator className="my-4" />
          <SidebarGroup>
           <SidebarGroupLabel>Manual Data Upload</SidebarGroupLabel>
