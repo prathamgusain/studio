@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, LogIn } from 'lucide-react';
+import { Droplets, LogIn, Loader2 } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import {
   initiateEmailSignIn,
@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isAuthInProgress, setIsAuthInProgress] = useState(false);
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
@@ -28,20 +29,23 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleEmailSignIn = () => {
+  const handleAuthAction = (action: 'signIn' | 'signUp') => {
     if (!email || !password) {
       toast({ variant: 'destructive', title: 'Error', description: 'Email and password cannot be empty.' });
       return;
     }
-    initiateEmailSignIn(auth, email, password);
-  };
+    setIsAuthInProgress(true);
+    const authPromise = action === 'signIn'
+      ? initiateEmailSignIn(auth, email, password)
+      : initiateEmailSignUp(auth, email, password);
 
-  const handleEmailSignUp = () => {
-    if (!email || !password) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Email and password cannot be empty.' });
-        return;
-    }
-    initiateEmailSignUp(auth, email, password);
+    authPromise
+      .catch(() => {
+        // Error is displayed via toast within the `initiate` functions
+      })
+      .finally(() => {
+        setIsAuthInProgress(false);
+      });
   };
 
   if (isUserLoading || user) {
@@ -74,6 +78,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isAuthInProgress}
               />
             </div>
             <div className="space-y-2">
@@ -84,11 +89,18 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isAuthInProgress}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button onClick={handleEmailSignIn}><LogIn className="mr-2 h-4 w-4" /> Sign In</Button>
-              <Button onClick={handleEmailSignUp} variant="outline">Sign Up</Button>
+              <Button onClick={() => handleAuthAction('signIn')} disabled={isAuthInProgress}>
+                {isAuthInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
+                Sign In
+              </Button>
+              <Button onClick={() => handleAuthAction('signUp')} variant="outline" disabled={isAuthInProgress}>
+                {isAuthInProgress && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign Up
+              </Button>
             </div>
           </div>
         </CardContent>
