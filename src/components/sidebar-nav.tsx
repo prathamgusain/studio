@@ -28,7 +28,6 @@ import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { AiInsightsPanel } from './ai-insights-panel';
 
 interface SidebarNavProps {
   filters: FilterState;
@@ -290,8 +289,6 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
             </p>
           </div>
         </SidebarGroup>
-        <SidebarSeparator className="my-4" />
-        <AiInsightsPanel filters={filters} />
       </SidebarContent>
       <SidebarFooter>
          <Button onClick={handlePrint} className="w-full" variant="outline">
