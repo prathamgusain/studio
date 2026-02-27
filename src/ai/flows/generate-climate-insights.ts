@@ -37,8 +37,11 @@ const generateClimateInsightsPrompt = ai.definePrompt({
   name: 'generateClimateInsightsPrompt',
   input: {schema: GenerateClimateInsightsInputSchema},
   output: {schema: GenerateClimateInsightsOutputSchema},
-  prompt: `You are an expert climate data analyst. Your task is to analyze the provided climate data summary and extract key insights.
-Identify significant trends, detect any anomalies or outliers, and predict potential future impacts based on the data.
+  prompt: `You are an expert climate data analyst. Your task is to analyze the provided summary of raw climate datasets and extract key insights.
+The summary includes starting and ending values for different climate indicators over a specified time period and region.
+Based on this information, identify significant trends, detect potential anomalies or outliers, and predict potential future impacts.
+Your analysis should consider the relationships between the different datasets (e.g., how temperature changes might correlate with CO2 levels).
+
 Format your response as a JSON object with the following fields: 'summary', 'trends', 'anomalies', and 'futureImpacts'.
 The 'trends', 'anomalies', and 'futureImpacts' fields should be arrays of strings.
 

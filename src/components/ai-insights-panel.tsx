@@ -15,6 +15,7 @@ import {
 import { Badge } from './ui/badge';
 import { SidebarGroup, SidebarGroupLabel } from './ui/sidebar';
 import type { FilterState } from '@/app/dashboard/layout';
+import { useDashboard } from '@/app/dashboard/layout';
 
 interface AiInsightsPanelProps {
   filters: FilterState;
@@ -24,6 +25,7 @@ export function AiInsightsPanel({ filters }: AiInsightsPanelProps) {
   const [isPending, startTransition] = useTransition();
   const [insights, setInsights] = useState<GenerateClimateInsightsOutput | null>(null);
   const { toast } = useToast();
+  const { tempData, co2Data, seaLevelData } = useDashboard();
 
   const handleGenerateInsights = () => {
     startTransition(async () => {
@@ -36,9 +38,30 @@ export function AiInsightsPanel({ filters }: AiInsightsPanelProps) {
         });
         return;
       }
-      const summary = `Climate data for ${filters.region} from ${filters.dateRange.from.toLocaleDateString()} to ${filters.dateRange.to.toLocaleDateString()}.`;
+      
+      const createDataSummary = (name: string, data: any[], unit: string) => {
+        if (!data || data.length === 0) {
+            return `${name}: No data available for the selected range.`;
+        }
+        const start = data[0];
+        const end = data[data.length - 1];
+        return `${name} from ${start.year} to ${end.year}:
+- Starts at ${start.value?.toFixed(2)} ${unit} in ${start.year}.
+- Ends at ${end.value?.toFixed(2)} ${unit} in ${end.year}.
+- Contains ${data.length} data points.`;
+      };
+
+      const climateDataSummary = `
+Analysis is for the ${filters.region} region, from ${filters.dateRange.from.toLocaleDateString()} to ${filters.dateRange.to.toLocaleDateString()}.
+
+Raw Data Summary:
+${createDataSummary('Temperature Anomaly', tempData, '°C')}
+${createDataSummary('Atmospheric CO₂', co2Data, 'ppm')}
+${createDataSummary('Sea Level Rise', seaLevelData, 'mm')}
+`;
+
       try {
-        const result = await getAiInsights({ climateDataSummary: summary });
+        const result = await getAiInsights({ climateDataSummary });
         setInsights(result);
       } catch (error) {
         toast({
