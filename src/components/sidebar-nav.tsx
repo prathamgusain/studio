@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -20,22 +20,91 @@ import {
   SidebarSeparator
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon, Droplets, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Droplets, Download, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import type { FilterState } from '@/app/page';
 import type { Dispatch, SetStateAction } from 'react';
 import { AiInsightsPanel } from './ai-insights-panel';
+import { useToast } from '@/hooks/use-toast';
 
 interface SidebarNavProps {
   filters: FilterState;
   setFilters: Dispatch<SetStateAction<FilterState>>;
+  onDataUpload: (data: any[], dataType: 'temperature' | 'co2') => void;
 }
 
 const regions = ['Global', 'North America', 'Europe', 'Asia', 'South America', 'Africa', 'Oceania'];
 
-export function SidebarNav({ filters, setFilters }: SidebarNavProps) {
+export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProps) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2'>('temperature');
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          const rows = text.split('\n');
+          const header = rows[0].split(',').map(h => h.trim());
+          const yearIndex = header.indexOf('year');
+          const valueIndex = header.indexOf('value');
+
+          if (yearIndex === -1 || valueIndex === -1) {
+            throw new Error('CSV must have "year" and "value" columns.');
+          }
+
+          const parsedData = rows
+            .slice(1)
+            .map(row => {
+                if (row.trim() === '') return null;
+                const columns = row.split(',');
+                const year = columns[yearIndex]?.trim();
+                const value = columns[valueIndex]?.trim();
+                if (year && value) {
+                    return { year: year, value: parseFloat(value) };
+                }
+                return null;
+            })
+            .filter(Boolean);
+
+            if (parsedData.length === 0) {
+              throw new Error('No data found in CSV file.');
+            }
+
+          onDataUpload(parsedData as any[], uploadDataType);
+        } catch (error) {
+           toast({
+            variant: "destructive",
+            title: "Error parsing CSV",
+            description: error instanceof Error ? error.message : "Could not parse the uploaded file.",
+          });
+        } finally {
+          // Reset file input
+          if(fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
+      };
+      reader.onerror = () => {
+        toast({
+            variant: "destructive",
+            title: "Error reading file",
+            description: "Could not read the uploaded file.",
+          });
+      };
+      reader.readAsText(file);
+    }
   };
 
   return (
@@ -118,6 +187,43 @@ export function SidebarNav({ filters, setFilters }: SidebarNavProps) {
         </SidebarGroup>
         <SidebarSeparator className="my-4" />
         <AiInsightsPanel filters={filters} />
+        <SidebarSeparator className="my-4" />
+         <SidebarGroup>
+          <SidebarGroupLabel>Manual Data Upload</SidebarGroupLabel>
+          <div className="space-y-4 pt-2">
+            <div>
+              <label htmlFor="data-type-select" className="text-sm font-medium text-muted-foreground">
+                Data Type
+              </label>
+              <Select
+                value={uploadDataType}
+                onValueChange={(value: 'temperature' | 'co2') => setUploadDataType(value)}
+              >
+                <SelectTrigger id="data-type-select" className="w-full">
+                  <SelectValue placeholder="Select data type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="temperature">Temperature</SelectItem>
+                  <SelectItem value="co2">CO₂</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleUploadClick} className="w-full" variant="outline">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload CSV
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+              accept=".csv"
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload a CSV with 'year' and 'value' columns.
+            </p>
+          </div>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
          <Button onClick={handlePrint} className="w-full" variant="outline">

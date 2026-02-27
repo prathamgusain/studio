@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { FilterState } from '@/app/page';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TemperatureChart } from './charts/temperature-chart';
@@ -8,60 +8,15 @@ import { PrecipitationChart } from './charts/precipitation-chart';
 import { precipitationData } from '@/lib/data';
 import { Header } from './header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 
 interface DashboardProps {
   filters: FilterState;
+  tempData: any[];
+  co2Data: any[];
+  loading: boolean;
 }
 
-export function Dashboard({ filters }: DashboardProps) {
-  const [loading, setLoading] = useState(true);
-  const [tempData, setTempData] = useState([]);
-  const [co2Data, setCo2Data] = useState([]);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    async function fetchData() {
-      if (!filters.dateRange?.from || !filters.dateRange?.to) {
-        return;
-      }
-      
-      setLoading(true);
-      
-      const fromYear = filters.dateRange.from.getFullYear();
-      const toYear = filters.dateRange.to.getFullYear();
-      const region = filters.region;
-      
-      try {
-        const [tempRes, co2Res] = await Promise.all([
-          fetch(`/api/climate?type=temperature&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
-          fetch(`/api/climate?type=co2&region=${encodeURIComponent(region)}&from=${fromYear}&to=${toYear}`),
-        ]);
-        
-        if (!tempRes.ok || !co2Res.ok) {
-            throw new Error('Failed to fetch climate data');
-        }
-
-        const tempDataJson = await tempRes.json();
-        const co2DataJson = await co2Res.json();
-        
-        setTempData(tempDataJson);
-        setCo2Data(co2DataJson);
-      } catch (error) {
-        console.error("Failed to fetch climate data", error);
-        toast({
-          variant: "destructive",
-          title: "Error fetching data",
-          description: error instanceof Error ? error.message : "Could not fetch climate data.",
-        })
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchData();
-  }, [filters.dateRange, filters.region, toast]);
-
+export function Dashboard({ filters, tempData, co2Data, loading }: DashboardProps) {
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4 no-print">
