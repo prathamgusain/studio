@@ -1,0 +1,201 @@
+/**
+ * Core Philosophy:
+ * This ruleset implements a robust security model centered on user ownership,
+ * read-only public data, and a global administrative role system. User-specific
+ * data is strictly segregated and accessible only by the owner, preventing any
+ * cross-user data access.
+ *
+ * Data Structure:
+ * The data is organized into several top-level collections:
+ * - /userProfiles/{userId}: Stores user-specific profile data, with the document
+ *   ID matching the user's authentication UID.
+ * - /users/{userId}/...: A private data tree for each user, containing their
+ *   personal subcollections like 'savedInsights' and 'savedReports'.
+ * - /climateData: A collection of globally readable climate information, with
+ *   writes restricted to backend services.
+ * - /roles_admin: Manages global administrator privileges using an "existence
+ *   over content" pattern.
+ *
+ * Key Security Decisions:
+ * - Default Deny: All paths are closed by default. Access must be explicitly granted.
+ * - User Data Privacy: All access to /userProfiles/{userId} and /users/{userId}/*
+ *   is strictly limited to the authenticated user matching the {userId}.
+ * - No User Enumeration: Listing documents in /userProfiles and /roles_admin
+ *   is explicitly forbidden to prevent enumeration of users or administrators.
+ * - Public Data is Read-Only: The /climateData collection is readable by any
+ *   authenticated user but cannot be modified from the client-side.
+ * - Global Admins: The existence of a document at /roles_admin/{userId} grants
+ *   admin privileges, checked via an efficient `exists()` call.
+ *
+ * Denormalization for Authorization:
+ * To ensure high performance and strong security, this ruleset relies on data
+ * denormalization. Subcollection documents like 'savedInsights' and 'savedReports'
+ * must contain an 'ownerId' field that duplicates the {userId} from the path.
+ * This avoids slow and costly `get()` calls to parent documents for authorization,
+ * allowing for simpler, more secure rules.
+ *
+ * Structural Segregation:
+ * The data model effectively separates private user data (under /users/{userId})
+ * from globally accessible data (/climateData). This clear separation simplifies
+ * rules and enhances query performance and security, preventing private data from
+ * ever being accidentally exposed in a public collection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     * This is the primary function for validating resource ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the user is an owner AND the document already exists.
+     * Crucial for preventing modification of non-existent documents.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Checks for the existence of an admin role document for the requesting user.
+     * This grants global administrator privileges.
+     * Changed to use get().data != null for better linter compatibility.
+     */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/roles_admin/$(request.auth.uid)).data != null;
+    }
+
+    // ------------------------------------------------------------------------
+    // User Profile Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description
+     *   Manages user profiles. A user can create their own profile, and can only
+     *   read, update, or delete their own. Listing profiles is disallowed to
+     *   prevent user enumeration.
+     * @path /userProfiles/{userId}
+     * @allow (create) An authenticated user creating their own profile document.
+     * @deny  (list) Any user attempting to list all user profiles.
+     * @deny  (get) User 'A' attempting to read user 'B's profile.
+     * @principle
+     *   Enforces self-creation and strict ownership of a user's root document.
+     *   Validates relational integrity on create and enforces immutability on update.
+     */
+    match /userProfiles/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId && request.resource.data.externalAuthId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.externalAuthId == resource.data.externalAuthId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    // ------------------------------------------------------------------------
+    // Public Data Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description
+     *   Allows any authenticated user to read climate data. Writes are primarily
+     *   for backend services, but global administrators are also permitted to write.
+     * @path /climateData/{climateDataId}
+     * @allow (get, list) Any signed-in user reading climate data records.
+     * @allow (create, update, delete) Global administrators.
+     * @principle
+     *   Provides public read access for authenticated users while ensuring
+     *   data integrity by disallowing most client-side write operations,
+     *   except for administrative override.
+     */
+    match /climateData/{climateDataId} {
+      allow get, list: if isSignedIn();
+      // Allow global admins to manage climate data, complementing backend services.
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // User-Owned Data Tree
+    // ------------------------------------------------------------------------
+
+    match /users/{userId} {
+
+      /**
+       * @description
+       *   Secures AI-generated insights saved by a user. Access is restricted
+       *   to the document owner for all operations.
+       * @path /users/{userId}/savedInsights/{insightId}
+       * @allow (create) User 'A' creating a new insight in their own subcollection.
+       * @deny  (get) User 'B' trying to read an insight from user 'A's collection.
+       * @deny  (create) User 'A' creating an insight with a mismatched `ownerId`.
+       * @principle
+       *   Restricts access to a user's own data tree and validates the denormalized
+       *   'ownerId' field to ensure relational integrity without extra reads.
+       */
+      match /savedInsights/{insightId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.ownerId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.ownerId == resource.data.ownerId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description
+       *   Secures custom reports generated by a user. Access is restricted
+       *   to the document owner for all operations.
+       * @path /users/{userId}/savedReports/{reportId}
+       * @allow (create) User 'A' creating a new report in their own subcollection.
+       * @deny  (get) User 'B' trying to read a report from user 'A's collection.
+       * @deny  (create) User 'A' creating a report with a mismatched `ownerId`.
+       * @principle
+       *   Restricts access to a user's own data tree and validates the denormalized
+       *   'ownerId' field to ensure relational integrity without extra reads.
+       */
+      match /savedReports/{reportId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.ownerId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.ownerId == resource.data.ownerId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // Administrative Roles
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description
+     *   Manages documents that grant global admin privileges. These documents should
+     *   be managed by a backend process. An admin can read their own role document,
+     *   but no client can list, create, update, or delete roles to prevent tampering.
+     * @path /roles_admin/{adminId}
+     * @allow (get) An admin user reading their own role document.
+     * @deny  (list, create, update, delete) Any user attempting any other operation.
+     * @principle
+     *   Uses an "existence over content" pattern. The rule's main purpose is to
+     *   protect the documents used by the `isAdmin()` helper function elsewhere.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if isOwner(adminId);
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

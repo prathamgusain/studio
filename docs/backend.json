@@ -1,0 +1,151 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile information within the EcoPulse application, separate from authentication credentials managed by an external system. This entity stores public or administrative user data.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "externalAuthId": {
+          "type": "string",
+          "description": "Reference to the unique identifier of the user in the external authentication system. This links the local profile to the authentication provider's user record. (Relationship: ExternalAuthSystem 1:1 UserProfile)"
+        },
+        "username": {
+          "type": "string",
+          "description": "A display name or chosen username for the user within the EcoPulse platform."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, primarily used for communication and identification purposes, not for direct authentication by EcoPulse.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the platform (e.g., 'policymaker', 'researcher'). This can determine access levels or dashboard views."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when this user profile was first created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when this user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "externalAuthId",
+        "username",
+        "email",
+        "role",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/userProfiles/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores individual user profiles. Each document ID (`userId`) directly corresponds to the Firebase Authentication UID, ensuring path-based ownership. The 'id' and 'externalAuthId' fields within the document will also store this 'userId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user who owns this profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/climateData/{climateDataId}",
+        "definition": {
+          "entityName": "ClimateDatum",
+          "schema": {
+            "$ref": "#/backend/entities/ClimateDatum"
+          },
+          "description": "Centralized storage for diverse real-time climate observations fetched from external APIs. This collection is designed for authenticated users to have read-only access. Write access is restricted to backend services or specific admin roles, ensuring a homogeneous security posture. QAPs are supported as all authenticated users have the same read permissions.",
+          "params": [
+            {
+              "name": "climateDataId",
+              "description": "Unique identifier for a specific climate data point or record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/savedInsights/{insightId}",
+        "definition": {
+          "entityName": "SavedInsight",
+          "schema": {
+            "$ref": "#/backend/entities/SavedInsight"
+          },
+          "description": "Stores AI-generated insights saved by individual users. Each insight document includes a denormalized 'ownerId' field (matching '{userId}') for robust authorization independence, eliminating the need for 'get()' operations in rules. QAPs are supported as list operations implicitly filter by the current user's UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user who owns these insights."
+            },
+            {
+              "name": "insightId",
+              "description": "Unique identifier for a specific saved AI-generated insight."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/savedReports/{reportId}",
+        "definition": {
+          "entityName": "SavedReport",
+          "schema": {
+            "$ref": "#/backend/entities/SavedReport"
+          },
+          "description": "Stores custom reports generated and saved by individual users. Each report document includes a denormalized 'ownerId' field (matching '{userId}') for robust authorization independence, eliminating the need for 'get()' operations in rules. QAPs are supported as list operations implicitly filter by the current user's UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user who owns these reports."
+            },
+            {
+              "name": "reportId",
+              "description": "Unique identifier for a specific saved report."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/AdminRole"
+          },
+          "description": "This collection implements the \"existence over content\" pattern for global administrative roles. The existence of a document at 'roles_admin/{request.auth.uid}' grants administrator privileges. This provides a clear and efficient way to manage global access, leveraging direct path validation for rules.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The Firebase Authentication UID of the user with administrative privileges."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure prioritizes security, scalability, and debuggability following the core design principles. \n\n**Authorization Independence:**\n*   For user-specific data like `/userProfiles/{userId}`, `/users/{userId}/savedInsights/{insightId}`, and `/users/{userId}/savedReports/{reportId}`, ownership is enforced directly through the path (`userId == request.auth.uid`). Additionally, for subcollections like `savedInsights` and `savedReports`, each document explicitly includes a denormalized `ownerId` field (mirroring the `userId` from the path). This critical denormalization eliminates the need for `get()` operations in security rules to check parent ownership, ensuring atomic write operations, simplifying rule logic, and enhancing debuggability. \n*   The `/climateData/{climateDataId}` collection, intended for global read-only access by authenticated users, inherently requires no `get()` calls for authorization as its access policy is uniform across all documents. \n*   The `/roles_admin/{adminId}` collection uses the 'existence over content' pattern for global roles. While this pattern involves a `get()` call within security rules (`exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))`), it is a direct, efficient, and idiomatic check for global role assignment, not a hierarchical authorization dependency that would break atomicity.\n\n**Querying for Authorized Paths (QAPs - Rules are not Filters):**\n*   **`/userProfiles/{userId}`:** Access rules will restrict reads and writes to `request.auth.uid == userId`. This inherently secures `list` operations, as users can only query their own profile path. \n*   **`/users/{userId}/savedInsights/{insightId}` & `/users/{userId}/savedReports/{reportId}`:** These subcollections are organized under a user's specific path. Security rules will enforce that `request.auth.uid` matches the `{userId}` in the path AND the `ownerId` field within the document. This dual verification ensures that `list` operations within these paths are inherently secure and implicitly filtered by the authenticated user's ID. A user cannot query another user's insights or reports. \n*   **`/climateData/{climateDataId}`:** Since all authenticated users have uniform read access to this collection, `list` operations are inherently secure. The rules will simply allow reads for any authenticated user, ensuring no unintended data exposure. \n*   **`/roles_admin/{adminId}`:** Users can only attempt to access their own admin role document, securing list operations against unauthorized enumeration of administrators.\n\n**Structural Segregation & Access Modeling:**\n*   **Private Data:** `userProfiles` and the `users/{userId}/...` subcollections use path-based ownership, ensuring data privacy for individual users. \n*   **Homogeneous Security:** Each collection (e.g., `userProfiles`, `climateData`) and subcollection (e.g., `savedInsights`) maintains a consistent security posture, simplifying rule sets significantly. For instance, all documents in `climateData` are globally readable by authenticated users, and all documents in `/users/{userId}/savedInsights` are owned by `userId`. \n*   **Global Roles:** The `roles_admin` collection uses an 'existence over content' model for efficient, top-level role checks, separate from per-profile roles."
+  }
+}
