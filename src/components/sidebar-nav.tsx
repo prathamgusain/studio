@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,12 +19,15 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarFooter,
-  SidebarSeparator
+  SidebarSeparator,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon, Droplets, Download, Upload } from 'lucide-react';
+import { Calendar as CalendarIcon, Droplets, Download, Upload, BarChart, Database } from 'lucide-react';
 import { format } from 'date-fns';
-import type { FilterState } from '@/app/dashboard/page';
+import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
 import { AiInsightsPanel } from './ai-insights-panel';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +43,7 @@ interface SidebarNavProps {
 const regions = ['Global', 'North America', 'Europe', 'Asia', 'South America', 'Africa', 'Oceania'];
 
 export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProps) {
+  const pathname = usePathname();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2' | 'sea-level'>('temperature');
@@ -140,6 +146,29 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <Link href="/dashboard" legacyBehavior passHref>
+                    <SidebarMenuButton asChild isActive={pathname === '/dashboard'}>
+                        <a>
+                            <BarChart />
+                            <span>Overview</span>
+                        </a>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/dashboard/datasets" legacyBehavior passHref>
+                    <SidebarMenuButton asChild isActive={pathname === '/dashboard/datasets'}>
+                        <a>
+                            <Database />
+                            <span>Raw Datasets</span>
+                        </a>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+        </SidebarMenu>
+        <SidebarSeparator className="my-4" />
         <SidebarGroup>
           <SidebarGroupLabel>Filters</SidebarGroupLabel>
           <div className="space-y-4 pt-2">
