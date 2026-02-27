@@ -15,13 +15,13 @@ const DataPointSchema = z.object({
   value: z.number().nullable(),
 });
 
-export const PredictClimateDataInputSchema = z.object({
+const PredictClimateDataInputSchema = z.object({
   dataType: z.string().describe('The type of climate data (e.g., Temperature Anomaly).'),
   data: z.array(DataPointSchema).describe('The historical climate data.'),
 });
 export type PredictClimateDataInput = z.infer<typeof PredictClimateDataInputSchema>;
 
-export const PredictClimateDataOutputSchema = z.array(z.object({
+const PredictClimateDataOutputSchema = z.array(z.object({
     year: z.string(),
     value: z.number(),
 }));
