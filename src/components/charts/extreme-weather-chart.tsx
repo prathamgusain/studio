@@ -1,21 +1,50 @@
 'use client';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
+import React from 'react';
 
 const chartConfig = {
-  value: {
+  historical: {
     label: 'Events',
     color: 'hsl(var(--chart-5))',
   },
+  predicted: {
+    label: 'Prediction',
+    color: 'hsl(var(--chart-5))',
+  }
 } satisfies ChartConfig;
 
+interface ChartProps {
+  data: { year: string; value: number | null }[];
+  predictionData?: { year: string; value: number }[];
+}
 
-export function ExtremeWeatherChart({ data }: { data: any[] }) {
+export function ExtremeWeatherChart({ data, predictionData }: ChartProps) {
+    const chartData = React.useMemo(() => {
+    const historical = data.map(d => ({ year: d.year, historical: d.value, predicted: null }));
+    if (!predictionData || predictionData.length === 0) {
+      return historical;
+    }
+    const predicted = predictionData.map(d => ({ year: d.year, historical: null, predicted: d.value }));
+    const combined = [...historical, ...predicted];
+    const uniqueYears = [...new Set(combined.map(d => d.year))].sort((a,b) => parseInt(a) - parseInt(b));
+
+    return uniqueYears.map(year => {
+      const historicalEntry = combined.find(d => d.year === year && d.historical !== null);
+      const predictedEntry = combined.find(d => d.year === year && d.predicted !== null);
+      return {
+        year,
+        historical: historicalEntry ? historicalEntry.historical : null,
+        predicted: predictedEntry ? predictedEntry.predicted : null,
+      };
+    });
+  }, [data, predictionData]);
+
   return (
     <ChartContainer config={chartConfig} className="h-[250px] w-full">
       <BarChart 
         accessibilityLayer
-        data={data}
+        data={chartData}
         margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
       >
         <CartesianGrid vertical={false} />
@@ -34,9 +63,13 @@ export function ExtremeWeatherChart({ data }: { data: any[] }) {
         />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent indicator="dot" labelFormatter={(label, payload) => `${payload[0]?.payload?.year}: ${payload[0]?.value} events`}/>}
+          content={<ChartTooltipContent indicator="dot" />}
         />
-        <Bar dataKey="value" fill="var(--color-value)" radius={4} name="Events" />
+        <Legend />
+        <Bar dataKey="historical" fill="var(--color-historical)" radius={4} name="Events" />
+        {predictionData && predictionData.length > 0 && (
+          <Bar dataKey="predicted" fill="var(--color-predicted)" fillOpacity={0.6} radius={4} name="Prediction" />
+        )}
       </BarChart>
     </ChartContainer>
   );

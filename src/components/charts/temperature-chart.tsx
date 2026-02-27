@@ -1,20 +1,60 @@
 'use client';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
+import React from 'react';
 
 const chartConfig = {
-  value: {
+  historical: {
     label: 'Temp Anomaly',
     color: 'hsl(var(--accent))',
   },
+  predicted: {
+    label: 'Prediction',
+    color: 'hsl(var(--accent))',
+  }
 } satisfies ChartConfig;
 
-export function TemperatureChart({ data }: { data: any[] }) {
+interface ChartProps {
+  data: { year: string; value: number | null }[];
+  predictionData?: { year: string; value: number }[];
+}
+
+export function TemperatureChart({ data, predictionData }: ChartProps) {
+  const chartData = React.useMemo(() => {
+    const historical = data.map(d => ({ year: d.year, historical: d.value, predicted: null }));
+    if (!predictionData || predictionData.length === 0) {
+      return historical;
+    }
+    const predicted = predictionData.map(d => ({ year: d.year, historical: null, predicted: d.value }));
+    const validData = data.filter(d => d.value !== null);
+    const lastHistoricalPoint = validData[validData.length - 1];
+
+    if (lastHistoricalPoint) {
+      const firstPrediction = predicted.find(p => parseInt(p.year) > parseInt(lastHistoricalPoint.year));
+      if (firstPrediction) {
+        predicted.unshift({ year: lastHistoricalPoint.year, historical: null, predicted: lastHistoricalPoint.value });
+      }
+    }
+    
+    const combined = [...historical, ...predicted];
+    const uniqueYears = [...new Set(combined.map(d => d.year))].sort((a,b) => parseInt(a) - parseInt(b));
+
+    return uniqueYears.map(year => {
+      const historicalEntry = combined.find(d => d.year === year && d.historical !== null);
+      const predictedEntry = combined.find(d => d.year === year && d.predicted !== null);
+      return {
+        year,
+        historical: historicalEntry ? historicalEntry.historical : null,
+        predicted: predictedEntry ? predictedEntry.predicted : null,
+      };
+    });
+  }, [data, predictionData]);
+
   return (
     <ChartContainer config={chartConfig} className="h-[250px] w-full">
       <LineChart
         accessibilityLayer
-        data={data}
+        data={chartData}
         margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
       >
         <CartesianGrid vertical={false} />
@@ -33,16 +73,28 @@ export function TemperatureChart({ data }: { data: any[] }) {
         />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent indicator="line" labelFormatter={(label, payload) => `${payload[0]?.payload?.year}: ${payload[0]?.value}°C`}/>}
+          content={<ChartTooltipContent indicator="line" />}
         />
+        <Legend />
         <Line
-          dataKey="value"
+          dataKey="historical"
           type="monotone"
-          stroke="var(--color-value)"
+          stroke="var(--color-historical)"
           strokeWidth={2}
           dot={true}
           name="Temp Anomaly"
         />
+        {predictionData && predictionData.length > 0 && (
+          <Line
+            dataKey="predicted"
+            type="monotone"
+            stroke="var(--color-predicted)"
+            strokeWidth={2}
+            dot={true}
+            strokeDasharray="5 5"
+            name="Prediction"
+          />
+        )}
       </LineChart>
     </ChartContainer>
   );
