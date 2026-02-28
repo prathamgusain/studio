@@ -1,5 +1,4 @@
 'use server';
-import { summarizeCorrelation, type SummarizeCorrelationInput } from '@/ai/flows/summarize-correlation';
 
 export type PredictClimateDataInput = {
     dataType: string;
@@ -151,15 +150,4 @@ export async function getCorrelation(input: CorrelationInput): Promise<Correlati
         interpretation: result,
         pairedData
     };
-}
-
-
-export async function getCorrelationSummary(input: SummarizeCorrelationInput): Promise<string> {
-    try {
-        const summary = await summarizeCorrelation(input);
-        return summary;
-    } catch (error) {
-        console.error("AI summary failed:", error);
-        return "Could not generate an AI-powered summary at this time.";
-    }
 }

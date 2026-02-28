@@ -8,8 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getCorrelation, getCorrelationSummary, type CorrelationOutput } from '@/app/actions';
-import { GitMerge, Loader2, WandSparkles } from 'lucide-react';
+import { getCorrelation, type CorrelationOutput } from '@/app/actions';
+import { GitMerge, Loader2, Info } from 'lucide-react';
 import { CorrelationChart } from '@/components/charts/correlation-chart';
 
 type Metric = 'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather';
@@ -29,7 +29,6 @@ export default function CorrelationPage() {
     const [metric1, setMetric1] = useState<Metric>('temperature');
     const [metric2, setMetric2] = useState<Metric>('co2');
     const [isCalculating, setIsCalculating] = useState(false);
-    const [isSummarizing, setIsSummarizing] = useState(false);
     const [result, setResult] = useState<CorrelationOutput | null>(null);
     const [summary, setSummary] = useState<string | null>(null);
 
@@ -44,6 +43,43 @@ export default function CorrelationPage() {
     const metric1Label = useMemo(() => metricOptions.find(m => m.value === metric1)?.label || '', [metric1]);
     const metric2Label = useMemo(() => metricOptions.find(m => m.value === metric2)?.label || '', [metric2]);
 
+    const getManualSummary = (correlationResult: CorrelationOutput) => {
+        if (correlationResult.correlation === null) {
+            return correlationResult.interpretation;
+        }
+
+        const r = correlationResult.correlation;
+        const absR = Math.abs(r);
+        let strength: string;
+        if (absR >= 0.8) strength = 'Very Strong';
+        else if (absR >= 0.6) strength = 'Strong';
+        else if (absR >= 0.4) strength = 'Moderate';
+        else if (absR >= 0.2) strength = 'Weak';
+        else strength = 'Very Weak or No';
+
+        const direction = r > 0 ? 'positive' : r < 0 ? 'negative' : 'neutral';
+
+        if (strength === 'Very Weak or No') {
+            return `The analysis shows little to no meaningful linear relationship between ${metric1Label} and ${metric2Label}. Changes in one metric do not correspond to predictable changes in the other. Other factors are likely influencing these metrics independently.`;
+        }
+
+        let summary = `The analysis reveals a ${strength.toLowerCase()} ${direction} correlation. `;
+        if (direction === 'positive') {
+            summary += `This suggests that as ${metric1Label} increases, ${metric2Label} also tends to increase. `;
+        } else {
+            summary += `This suggests that as ${metric1Label} increases, ${metric2Label} tends to decrease. `;
+        }
+
+        if (strength === 'Very Strong' || strength === 'Strong') {
+            summary += `This strong relationship indicates that the two metrics are closely linked.`;
+        } else if (strength === 'Moderate') {
+            summary += `This moderate relationship indicates a noticeable but not perfect connection between the two metrics.`;
+        } else { // Weak
+            summary += `While a trend is present, the connection is weak, and other factors likely have a significant impact.`;
+        }
+        return summary;
+    }
+
     const handleCalculateCorrelation = async () => {
         if (metric1 === metric2) {
             toast({
@@ -55,7 +91,6 @@ export default function CorrelationPage() {
         }
 
         setIsCalculating(true);
-        setIsSummarizing(false);
         setResult(null);
         setSummary(null);
 
@@ -73,14 +108,8 @@ export default function CorrelationPage() {
                     description: correlationResult.interpretation,
                 });
             } else {
-                setIsSummarizing(true);
-                const summaryResult = await getCorrelationSummary({
-                    metric1: metric1Label,
-                    metric2: metric2Label,
-                    correlation: correlationResult.correlation,
-                    interpretation: correlationResult.interpretation
-                });
-                setSummary(summaryResult);
+                const manualSummary = getManualSummary(correlationResult);
+                setSummary(manualSummary);
             }
 
         } catch (error) {
@@ -92,7 +121,6 @@ export default function CorrelationPage() {
             });
         } finally {
             setIsCalculating(false);
-            setIsSummarizing(false);
         }
     };
     
@@ -170,24 +198,12 @@ export default function CorrelationPage() {
                                                      <p className="text-muted-foreground">{result.interpretation}</p>
                                                 )}
                                             </div>
-
-                                            {isSummarizing && (
-                                                <div className="space-y-2 rounded-md border border-dashed bg-background p-4">
-                                                    <h4 className="text-sm font-semibold mb-2 flex items-center">
-                                                        <WandSparkles className="mr-2 h-4 w-4 text-accent" />
-                                                        Generating AI Insight...
-                                                    </h4>
-                                                    <Skeleton className="h-4 w-full" />
-                                                    <Skeleton className="h-4 w-full" />
-                                                    <Skeleton className="h-4 w-3/4" />
-                                                </div>
-                                            )}
-
-                                            {!isSummarizing && summary && (
+                                            
+                                            {summary && (
                                                 <div className="rounded-md border border-dashed bg-background p-4">
                                                     <h4 className="text-sm font-semibold mb-2 flex items-center">
-                                                        <WandSparkles className="mr-2 h-4 w-4 text-accent" />
-                                                        AI Insight Summary
+                                                        <Info className="mr-2 h-4 w-4 text-accent" />
+                                                        Insight Summary
                                                     </h4>
                                                     <p className="text-sm text-muted-foreground">{summary}</p>
                                                 </div>
