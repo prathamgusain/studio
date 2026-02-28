@@ -25,7 +25,11 @@
         },
         "role": {
           "type": "string",
-          "description": "The role of the user within the platform (e.g., 'policymaker', 'researcher'). This can determine access levels or dashboard views."
+          "description": "The subscription plan for the user, determining access to features.",
+          "enum": [
+            "free",
+            "pro"
+          ]
         },
         "createdAt": {
           "type": "string",

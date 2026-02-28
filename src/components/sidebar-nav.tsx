@@ -23,11 +23,13 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Droplets, Download, Upload, BarChart, Database, Info, TrendingUp, GitMerge } from 'lucide-react';
+import { Droplets, Download, Upload, BarChart, Database, Info, TrendingUp, GitMerge, Lock } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboard } from '@/app/dashboard/layout';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface SidebarNavProps {
   filters: FilterState;
@@ -42,6 +44,9 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadDataType, setUploadDataType] = useState<'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather'>('temperature');
+
+  const { userProfile } = useDashboard();
+  const isPro = userProfile?.role === 'pro';
 
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -156,6 +161,29 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
     }
   }
 
+  const ProFeature = ({ href, isActive, icon, label }: { href: string, isActive: boolean, icon: React.ReactNode, label: string }) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={!isPro ? 'cursor-not-allowed w-full' : 'w-full'}>
+            <SidebarMenuButton asChild isActive={isActive} disabled={!isPro}>
+              <Link href={href} className={!isPro ? 'pointer-events-none' : ''}>
+                {icon}
+                <span>{label}</span>
+                {!isPro && <Lock className="ml-auto" />}
+              </Link>
+            </SidebarMenuButton>
+          </div>
+        </TooltipTrigger>
+        {!isPro && (
+          <TooltipContent side="right" align="center">
+            <p>Upgrade to Pro to access this feature.</p>
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
+  );
+
 
   return (
     <>
@@ -176,12 +204,12 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/dashboard/datasets'}>
-                    <Link href="/dashboard/datasets">
-                        <Database />
-                        <span>Raw Datasets</span>
-                    </Link>
-                </SidebarMenuButton>
+                <ProFeature 
+                  href="/dashboard/datasets"
+                  isActive={pathname === '/dashboard/datasets'}
+                  icon={<Database />}
+                  label="Raw Datasets"
+                />
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === '/dashboard/summary'}>
@@ -192,12 +220,12 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/dashboard/predictions'}>
-                    <Link href="/dashboard/predictions">
-                        <TrendingUp />
-                        <span>Predictive Analysis</span>
-                    </Link>
-                </SidebarMenuButton>
+                <ProFeature 
+                  href="/dashboard/predictions"
+                  isActive={pathname === '/dashboard/predictions'}
+                  icon={<TrendingUp />}
+                  label="Predictive Analysis"
+                />
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === '/dashboard/correlation'}>
@@ -283,7 +311,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleUploadClick} className="w-full" variant="outline">
+            <Button onClick={handleUploadClick} className="w-full" variant="outline" disabled={!isPro}>
               <Upload className="mr-2 h-4 w-4" />
               Upload CSV
             </Button>
@@ -295,7 +323,7 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
               accept=".csv"
             />
             <p className="text-xs text-muted-foreground">
-              Upload a CSV with 'year' and 'value' columns.
+              {isPro ? "Upload a CSV with 'year' and 'value' columns." : "Upgrade to Pro to upload data."}
             </p>
           </div>
         </SidebarGroup>

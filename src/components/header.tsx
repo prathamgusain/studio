@@ -1,7 +1,7 @@
 'use client';
 
 import { SidebarTrigger } from './ui/sidebar';
-import { useUser, useAuth, initiateSignOut } from '@/firebase';
+import { useUser, useAuth, initiateSignOut, useFirestore } from '@/firebase';
 import { Button } from './ui/button';
 import {
   DropdownMenu,
@@ -13,11 +13,15 @@ import {
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { LogOut } from 'lucide-react';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 export function Header({ region }: { region: string }) {
-  const { user } = useUser();
+  const { user, userProfile } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
 
   const handleLogout = () => {
     initiateSignOut(auth);
@@ -31,6 +35,13 @@ export function Header({ region }: { region: string }) {
     }
     return name[0];
   }
+
+  const handleRoleChange = (role: 'free' | 'pro') => {
+    if (user && userProfile && userProfile.role !== role) {
+        const userProfileRef = doc(firestore, 'userProfiles', user.uid);
+        updateDocumentNonBlocking(userProfileRef, { role: role, updatedAt: new Date().toISOString() });
+    }
+  };
 
   return (
     <>
@@ -62,6 +73,23 @@ export function Header({ region }: { region: string }) {
               {user.isAnonymous ? 'Anonymous User' : (user.displayName || user.email)}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+             {userProfile && (
+              <>
+                <DropdownMenuLabel className="font-normal text-xs text-muted-foreground pt-0 -mb-2">Subscription Plan</DropdownMenuLabel>
+                <div className="px-2 py-2">
+                    <Select value={userProfile.role} onValueChange={handleRoleChange}>
+                        <SelectTrigger className="h-8">
+                            <SelectValue placeholder="Select plan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="free">Free</SelectItem>
+                            <SelectItem value="pro">Pro</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout

@@ -25,6 +25,8 @@ interface DashboardContextType {
     arcticIceData: any[];
     extremeWeatherEventsData: any[];
     loading: boolean;
+    userProfile: any | null;
+    isProfileLoading: boolean;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -38,7 +40,7 @@ export const useDashboard = () => {
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, isProfileLoading } = useUser();
   const router = useRouter();
 
   const [filters, setFilters] = useState<FilterState>({
@@ -140,7 +142,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     });
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || isProfileLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <p>Loading...</p>
@@ -155,7 +157,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       seaLevelData,
       arcticIceData,
       extremeWeatherEventsData,
-      loading
+      loading,
+      userProfile,
+      isProfileLoading
   };
 
   return (
