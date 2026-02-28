@@ -165,15 +165,13 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={!isPro ? 'cursor-not-allowed w-full' : 'w-full'}>
-            <SidebarMenuButton asChild isActive={isActive} disabled={!isPro}>
-              <Link href={href} className={!isPro ? 'pointer-events-none' : ''}>
-                {icon}
-                <span>{label}</span>
-                {!isPro && <Lock className="ml-auto" />}
-              </Link>
-            </SidebarMenuButton>
-          </div>
+          <SidebarMenuButton asChild isActive={isActive && isPro}>
+            <Link href={!isPro ? '/subscription' : href}>
+              {icon}
+              <span>{label}</span>
+              {!isPro && <Lock className="ml-auto" />}
+            </Link>
+          </SidebarMenuButton>
         </TooltipTrigger>
         {!isPro && (
           <TooltipContent side="right" align="center">
@@ -311,10 +309,29 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleUploadClick} className="w-full" variant="outline" disabled={!isPro}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload CSV
-            </Button>
+            {isPro ? (
+               <Button onClick={handleUploadClick} className="w-full" variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload CSV
+              </Button>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild className="w-full">
+                      <Button asChild variant="outline" className="w-full">
+                        <Link href="/subscription">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload CSV
+                            <Lock className="ml-auto" />
+                        </Link>
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="center">
+                      <p>Upgrade to Pro to upload data.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <input
               type="file"
               ref={fileInputRef}

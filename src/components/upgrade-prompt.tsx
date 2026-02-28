@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Rocket } from 'lucide-react';
+import Link from 'next/link';
 
 export function UpgradePrompt() {
     return (
@@ -20,7 +21,9 @@ export function UpgradePrompt() {
                     <p className="text-sm text-muted-foreground mb-4">
                         Unlock Raw Data access, Predictive Analysis, and more by upgrading your plan.
                     </p>
-                    <Button disabled>Upgrade Now (Coming Soon)</Button>
+                    <Button asChild>
+                        <Link href="/subscription">Upgrade to Pro</Link>
+                    </Button>
                 </CardContent>
             </Card>
         </div>
