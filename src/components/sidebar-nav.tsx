@@ -23,7 +23,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Droplets, Download, Upload, BarChart, Database, Info, TrendingUp, WandSparkles } from 'lucide-react';
+import { Droplets, Download, Upload, BarChart, Database, Info, TrendingUp } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
@@ -203,16 +203,6 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                         <a>
                             <TrendingUp />
                             <span>Predictive Analysis</span>
-                        </a>
-                    </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <Link href="/dashboard/outlook" legacyBehavior passHref>
-                    <SidebarMenuButton asChild isActive={pathname === '/dashboard/outlook'}>
-                        <a>
-                            <WandSparkles />
-                            <span>Future Outlook</span>
                         </a>
                     </SidebarMenuButton>
                 </Link>
