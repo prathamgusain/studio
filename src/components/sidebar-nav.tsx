@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -24,7 +23,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Droplets, Download, Upload, BarChart, Database, Info, TrendingUp, GitMerge, Lock } from 'lucide-react';
+import { Droplets, Download, Upload, BarChart, Database, Info, TrendingUp, GitMerge, Lock, Gem } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import type { FilterState } from '@/app/dashboard/layout';
 import type { Dispatch, SetStateAction } from 'react';
@@ -231,6 +230,14 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                     <Link href="/dashboard/correlation">
                         <GitMerge />
                         <span>Correlation Analysis</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === '/subscription'}>
+                    <Link href="/subscription">
+                        <Gem />
+                        <span>Subscription</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
