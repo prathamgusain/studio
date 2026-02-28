@@ -7,8 +7,7 @@ import { Header } from '@/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getPrediction } from '@/app/actions';
-import type { PredictClimateDataOutput } from '@/ai/flows/predict-climate-data';
+import { getPrediction, type PredictClimateDataOutput } from '@/app/actions';
 
 import { TemperatureChart } from '@/components/charts/temperature-chart';
 import { CO2Chart } from '@/components/charts/co2-chart';
@@ -144,7 +143,7 @@ export default function PredictionsPage() {
                             <CardHeader className="pb-2">
                                 <CardTitle>Extreme Weather Events</CardTitle>
                                 <CardDescription>Historical data with prediction up to 2040.</CardDescription>
-                            </CardHeader>
+                            </Header>
                             <CardContent>
                                 {historicalDataLoading ? (
                                     <Skeleton className="h-[250px] w-full" />
