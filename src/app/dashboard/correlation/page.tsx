@@ -178,7 +178,7 @@ export default function CorrelationPage() {
                                     <Select value={metric2} onValueChange={(v) => setMetric2(v as Metric)}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select second metric" />
-                                        </Trigger>
+                                        </SelectTrigger>
                                         <SelectContent>
                                             {metricOptions.map(opt => (
                                                 <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
