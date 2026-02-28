@@ -25,7 +25,7 @@ const GenerateFutureOutlookInputSchema = z.object({
 });
 export type GenerateFutureOutlookInput = z.infer<typeof GenerateFutureOutlookInputSchema>;
 
-export type GenerateFutureOutlookOutput = z.string();
+export type GenerateFutureOutlookOutput = string;
 
 export async function generateFutureOutlook(input: GenerateFutureOutlookInput): Promise<GenerateFutureOutlookOutput> {
   return generateFutureOutlookFlow(input);
