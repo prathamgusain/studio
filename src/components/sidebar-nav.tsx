@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -226,12 +227,12 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 />
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <ProFeature 
-                  href="/dashboard/correlation"
-                  isActive={pathname === '/dashboard/correlation'}
-                  icon={<GitMerge />}
-                  label="Correlation Analysis"
-                />
+                <SidebarMenuButton asChild isActive={pathname === '/dashboard/correlation'}>
+                    <Link href="/dashboard/correlation">
+                        <GitMerge />
+                        <span>Correlation Analysis</span>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
         <SidebarSeparator className="my-4" />

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -11,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { getCorrelation, type CorrelationOutput } from '@/app/actions';
 import { GitMerge, Loader2, Info } from 'lucide-react';
 import { CorrelationChart } from '@/components/charts/correlation-chart';
-import { UpgradePrompt } from '@/components/upgrade-prompt';
 
 type Metric = 'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather';
 
@@ -32,8 +32,6 @@ export default function CorrelationPage() {
     const [isCalculating, setIsCalculating] = useState(false);
     const [result, setResult] = useState<CorrelationOutput | null>(null);
     const [summary, setSummary] = useState<string | null>(null);
-
-    const isPro = userProfile?.role === 'pro';
 
     const dataMap = useMemo(() => ({
         temperature: tempData,
@@ -142,10 +140,6 @@ export default function CorrelationPage() {
                     </Card>
                 </div>
             )
-        }
-    
-        if (!isPro) {
-          return <UpgradePrompt />;
         }
     
         return (
