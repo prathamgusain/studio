@@ -168,54 +168,44 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
       <SidebarContent className="p-2">
         <SidebarMenu>
             <SidebarMenuItem>
-                <Link href="/dashboard" legacyBehavior passHref>
-                    <SidebarMenuButton asChild isActive={pathname === '/dashboard'}>
-                        <a>
-                            <BarChart />
-                            <span>Overview</span>
-                        </a>
-                    </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton asChild isActive={pathname === '/dashboard'}>
+                    <Link href="/dashboard">
+                        <BarChart />
+                        <span>Overview</span>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <Link href="/dashboard/datasets" legacyBehavior passHref>
-                    <SidebarMenuButton asChild isActive={pathname === '/dashboard/datasets'}>
-                        <a>
-                            <Database />
-                            <span>Raw Datasets</span>
-                        </a>
-                    </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton asChild isActive={pathname === '/dashboard/datasets'}>
+                    <Link href="/dashboard/datasets">
+                        <Database />
+                        <span>Raw Datasets</span>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <Link href="/dashboard/summary" legacyBehavior passHref>
-                    <SidebarMenuButton asChild isActive={pathname === '/dashboard/summary'}>
-                        <a>
-                            <Info />
-                            <span>Data Summary</span>
-                        </a>
-                    </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton asChild isActive={pathname === '/dashboard/summary'}>
+                    <Link href="/dashboard/summary">
+                        <Info />
+                        <span>Data Summary</span>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <Link href="/dashboard/predictions" legacyBehavior passHref>
-                    <SidebarMenuButton asChild isActive={pathname === '/dashboard/predictions'}>
-                        <a>
-                            <TrendingUp />
-                            <span>Predictive Analysis</span>
-                        </a>
-                    </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton asChild isActive={pathname === '/dashboard/predictions'}>
+                    <Link href="/dashboard/predictions">
+                        <TrendingUp />
+                        <span>Predictive Analysis</span>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <Link href="/dashboard/correlation" legacyBehavior passHref>
-                    <SidebarMenuButton asChild isActive={pathname === '/dashboard/correlation'}>
-                        <a>
-                            <GitMerge />
-                            <span>Correlation Analysis</span>
-                        </a>
-                    </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton asChild isActive={pathname === '/dashboard/correlation'}>
+                    <Link href="/dashboard/correlation">
+                        <GitMerge />
+                        <span>Correlation Analysis</span>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
         <SidebarSeparator className="my-4" />
