@@ -7,7 +7,7 @@ import { Header } from '@/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getFutureOutlook } from '@/app/actions';
+import { getFutureOutlook, getPrediction } from '@/app/actions';
 import { WandSparkles } from 'lucide-react';
 
 export default function OutlookPage() {
@@ -22,6 +22,20 @@ export default function OutlookPage() {
         setOutlook(null);
 
         try {
+            const [
+                tempPrediction,
+                co2Prediction,
+                seaLevelPrediction,
+                arcticIcePrediction,
+                extremeWeatherPrediction
+            ] = await Promise.all([
+                getPrediction({ dataType: 'Temperature Anomaly', data: tempData }),
+                getPrediction({ dataType: 'Atmospheric CO2', data: co2Data }),
+                getPrediction({ dataType: 'Sea Level Rise', data: seaLevelData }),
+                getPrediction({ dataType: 'Arctic Ice Extent', data: arcticIceData }),
+                getPrediction({ dataType: 'Extreme Weather Events', data: extremeWeatherEventsData }),
+            ]);
+
             const result = await getFutureOutlook({
                 region: filters.region,
                 temperatureData: tempData,
@@ -29,6 +43,11 @@ export default function OutlookPage() {
                 seaLevelData: seaLevelData,
                 arcticIceData: arcticIceData,
                 extremeWeatherEventsData: extremeWeatherEventsData,
+                predictedTemperatureData: tempPrediction,
+                predictedCo2Data: co2Prediction,
+                predictedSeaLevelData: seaLevelPrediction,
+                predictedArcticIceData: arcticIcePrediction,
+                predictedExtremeWeatherEventsData: extremeWeatherPrediction,
             });
 
             setOutlook(result);
@@ -90,7 +109,7 @@ export default function OutlookPage() {
                     <CardHeader>
                         <CardTitle>Climate Outlook Summary for {filters.region}</CardTitle>
                         <CardDescription>
-                            This is an AI-generated analysis based on historical data from {filters.dateRange?.from?.getFullYear()} to {filters.dateRange?.to?.getFullYear()}.
+                            This is an AI-generated analysis based on historical data from {filters.dateRange?.from?.getFullYear()} to {filters.dateRange?.to?.getFullYear()} and predictions up to 2040.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
