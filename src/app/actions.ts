@@ -69,3 +69,83 @@ export async function getPrediction(input: PredictClimateDataInput): Promise<Pre
 
     return predictions;
 }
+
+export type CorrelationInput = {
+    dataset1: { year: string; value: number | null }[];
+    dataset2: { year: string; value: number | null }[];
+};
+
+export type CorrelationOutput = {
+    correlation: number | null;
+    interpretation: string;
+};
+
+function calculatePearsonCorrelation(data: { x: number; y: number }[]): number | null {
+    const n = data.length;
+    if (n < 2) {
+        return null; // Not enough data
+    }
+
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+    for (const point of data) {
+        sumX += point.x;
+        sumY += point.y;
+        sumXY += point.x * point.y;
+        sumX2 += point.x * point.x;
+        sumY2 += point.y * point.y;
+    }
+
+    const numerator = n * sumXY - sumX * sumY;
+    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+    if (denominator === 0) {
+        return 0; // No variation
+    }
+
+    return numerator / denominator;
+}
+
+function getCorrelationInterpretation(r: number): string {
+    const absR = Math.abs(r);
+    if (absR >= 0.8) return 'Very Strong';
+    if (absR >= 0.6) return 'Strong';
+    if (absR >= 0.4) return 'Moderate';
+    if (absR >= 0.2) return 'Weak';
+    return 'Very Weak or No';
+}
+
+export async function getCorrelation(input: CorrelationInput): Promise<CorrelationOutput> {
+    const dataMap1 = new Map(input.dataset1.map(d => [d.year, d.value]));
+    
+    const pairedData: { x: number; y: number }[] = [];
+
+    for (const d2 of input.dataset2) {
+        if (d2.value !== null && dataMap1.has(d2.year)) {
+            const val1 = dataMap1.get(d2.year);
+            if (val1 !== null && val1 !== undefined) {
+                pairedData.push({ x: val1, y: d2.value });
+            }
+        }
+    }
+
+    if (pairedData.length < 2) {
+        return { correlation: null, interpretation: 'Not enough overlapping data points to calculate correlation.' };
+    }
+
+    const correlation = calculatePearsonCorrelation(pairedData);
+
+    if (correlation === null) {
+        return { correlation: null, interpretation: 'Could not calculate correlation.' };
+    }
+
+    const direction = correlation > 0 ? 'positive' : correlation < 0 ? 'negative' : 'neutral';
+    const strength = getCorrelationInterpretation(correlation);
+    const result = (strength === 'Very Weak or No') 
+        ? `There is a ${strength} correlation between the two datasets.`
+        : `There is a ${strength} ${direction} correlation between the two datasets.`
+
+    return {
+        correlation,
+        interpretation: result
+    };
+}
