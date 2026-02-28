@@ -8,8 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getCorrelation, type CorrelationOutput } from '@/app/actions';
-import { GitMerge, Loader2 } from 'lucide-react';
+import { getCorrelation, getCorrelationSummary, type CorrelationOutput } from '@/app/actions';
+import { GitMerge, Loader2, WandSparkles } from 'lucide-react';
 import { CorrelationChart } from '@/components/charts/correlation-chart';
 
 type Metric = 'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather';
@@ -29,7 +29,9 @@ export default function CorrelationPage() {
     const [metric1, setMetric1] = useState<Metric>('temperature');
     const [metric2, setMetric2] = useState<Metric>('co2');
     const [isCalculating, setIsCalculating] = useState(false);
+    const [isSummarizing, setIsSummarizing] = useState(false);
     const [result, setResult] = useState<CorrelationOutput | null>(null);
+    const [summary, setSummary] = useState<string | null>(null);
 
     const dataMap = useMemo(() => ({
         temperature: tempData,
@@ -38,6 +40,9 @@ export default function CorrelationPage() {
         'arctic-ice': arcticIceData,
         'extreme-weather': extremeWeatherEventsData,
     }), [tempData, co2Data, seaLevelData, arcticIceData, extremeWeatherEventsData]);
+
+    const metric1Label = useMemo(() => metricOptions.find(m => m.value === metric1)?.label || '', [metric1]);
+    const metric2Label = useMemo(() => metricOptions.find(m => m.value === metric2)?.label || '', [metric2]);
 
     const handleCalculateCorrelation = async () => {
         if (metric1 === metric2) {
@@ -50,7 +55,9 @@ export default function CorrelationPage() {
         }
 
         setIsCalculating(true);
+        setIsSummarizing(false);
         setResult(null);
+        setSummary(null);
 
         try {
             const dataset1 = dataMap[metric1];
@@ -65,6 +72,15 @@ export default function CorrelationPage() {
                     title: 'Calculation Notice',
                     description: correlationResult.interpretation,
                 });
+            } else {
+                setIsSummarizing(true);
+                const summaryResult = await getCorrelationSummary({
+                    metric1: metric1Label,
+                    metric2: metric2Label,
+                    correlation: correlationResult.correlation,
+                    interpretation: correlationResult.interpretation
+                });
+                setSummary(summaryResult);
             }
 
         } catch (error) {
@@ -76,11 +92,9 @@ export default function CorrelationPage() {
             });
         } finally {
             setIsCalculating(false);
+            setIsSummarizing(false);
         }
     };
-    
-    const metric1Label = metricOptions.find(m => m.value === metric1)?.label || '';
-    const metric2Label = metricOptions.find(m => m.value === metric2)?.label || '';
     
     return (
         <div className="flex flex-1 flex-col">
@@ -131,11 +145,11 @@ export default function CorrelationPage() {
                                     {isCalculating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GitMerge className="mr-2 h-4 w-4" />}
                                     Calculate Correlation
                                 </Button>
-                                {(isCalculating || historicalDataLoading) && (
+                                {(isCalculating) && (
                                      <Skeleton className="h-[480px] w-full" />
                                 )}
 
-                                {!isCalculating && !historicalDataLoading && result && (
+                                {!isCalculating && result && (
                                      <Card className="bg-secondary">
                                          <CardHeader>
                                              <CardTitle className="text-lg">Correlation Result</CardTitle>
@@ -156,6 +170,29 @@ export default function CorrelationPage() {
                                                      <p className="text-muted-foreground">{result.interpretation}</p>
                                                 )}
                                             </div>
+
+                                            {isSummarizing && (
+                                                <div className="space-y-2 rounded-md border border-dashed bg-background p-4">
+                                                    <h4 className="text-sm font-semibold mb-2 flex items-center">
+                                                        <WandSparkles className="mr-2 h-4 w-4 text-accent" />
+                                                        Generating AI Insight...
+                                                    </h4>
+                                                    <Skeleton className="h-4 w-full" />
+                                                    <Skeleton className="h-4 w-full" />
+                                                    <Skeleton className="h-4 w-3/4" />
+                                                </div>
+                                            )}
+
+                                            {!isSummarizing && summary && (
+                                                <div className="rounded-md border border-dashed bg-background p-4">
+                                                    <h4 className="text-sm font-semibold mb-2 flex items-center">
+                                                        <WandSparkles className="mr-2 h-4 w-4 text-accent" />
+                                                        AI Insight Summary
+                                                    </h4>
+                                                    <p className="text-sm text-muted-foreground">{summary}</p>
+                                                </div>
+                                            )}
+                                            
                                             {result.pairedData.length > 0 && (
                                                 <CorrelationChart 
                                                     data={result.pairedData}
