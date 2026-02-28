@@ -226,12 +226,12 @@ export function SidebarNav({ filters, setFilters, onDataUpload }: SidebarNavProp
                 />
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/dashboard/correlation'}>
-                    <Link href="/dashboard/correlation">
-                        <GitMerge />
-                        <span>Correlation Analysis</span>
-                    </Link>
-                </SidebarMenuButton>
+                <ProFeature 
+                  href="/dashboard/correlation"
+                  isActive={pathname === '/dashboard/correlation'}
+                  icon={<GitMerge />}
+                  label="Correlation Analysis"
+                />
             </SidebarMenuItem>
         </SidebarMenu>
         <SidebarSeparator className="my-4" />
