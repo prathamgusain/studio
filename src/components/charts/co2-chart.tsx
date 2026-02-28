@@ -1,5 +1,5 @@
 'use client';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import React from 'react';
 
@@ -26,6 +26,16 @@ export function CO2Chart({ data, predictionData }: ChartProps) {
       return historical;
     }
     const predicted = predictionData.map(d => ({ year: d.year, historical: null, predicted: d.value }));
+    const validData = data.filter(d => d.value !== null);
+    const lastHistoricalPoint = validData[validData.length - 1];
+
+    if (lastHistoricalPoint) {
+      const firstPrediction = predicted.find(p => parseInt(p.year) > parseInt(lastHistoricalPoint.year));
+      if (firstPrediction) {
+        predicted.unshift({ year: lastHistoricalPoint.year, historical: null, predicted: lastHistoricalPoint.value });
+      }
+    }
+    
     const combined = [...historical, ...predicted];
     const uniqueYears = [...new Set(combined.map(d => d.year))].sort((a,b) => parseInt(a) - parseInt(b));
 
@@ -42,7 +52,7 @@ export function CO2Chart({ data, predictionData }: ChartProps) {
 
   return (
     <ChartContainer config={chartConfig} className="h-[250px] w-full">
-      <BarChart 
+      <LineChart 
         accessibilityLayer
         data={chartData}
         margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
@@ -64,14 +74,31 @@ export function CO2Chart({ data, predictionData }: ChartProps) {
         />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent indicator="dot" />}
+          content={<ChartTooltipContent indicator="line" />}
         />
         <Legend />
-        <Bar dataKey="historical" fill="var(--color-historical)" radius={4} name="CO₂ (ppm)" />
+        <Line
+          dataKey="historical"
+          type="monotone"
+          stroke="var(--color-historical)"
+          strokeWidth={2}
+          dot={true}
+          name="CO₂ (ppm)"
+          connectNulls={false}
+        />
         {predictionData && predictionData.length > 0 && (
-          <Bar dataKey="predicted" fill="var(--color-predicted)" fillOpacity={0.6} radius={4} name="Prediction" />
+          <Line
+            dataKey="predicted"
+            type="monotone"
+            stroke="var(--color-predicted)"
+            strokeWidth={2}
+            dot={true}
+            strokeDasharray="5 5"
+            name="Prediction"
+            connectNulls={false}
+          />
         )}
-      </BarChart>
+      </LineChart>
     </ChartContainer>
   );
 }
