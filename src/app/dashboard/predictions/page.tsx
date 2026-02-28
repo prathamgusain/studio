@@ -143,7 +143,7 @@ export default function PredictionsPage() {
                             <CardHeader className="pb-2">
                                 <CardTitle>Extreme Weather Events</CardTitle>
                                 <CardDescription>Historical data with prediction up to 2040.</CardDescription>
-                            </Header>
+                            </CardHeader>
                             <CardContent>
                                 {historicalDataLoading ? (
                                     <Skeleton className="h-[250px] w-full" />
