@@ -78,6 +78,7 @@ export type CorrelationInput = {
 export type CorrelationOutput = {
     correlation: number | null;
     interpretation: string;
+    pairedData: { x: number; y: number }[];
 };
 
 function calculatePearsonCorrelation(data: { x: number; y: number }[]): number | null {
@@ -129,13 +130,13 @@ export async function getCorrelation(input: CorrelationInput): Promise<Correlati
     }
 
     if (pairedData.length < 2) {
-        return { correlation: null, interpretation: 'Not enough overlapping data points to calculate correlation.' };
+        return { correlation: null, interpretation: 'Not enough overlapping data points to calculate correlation.', pairedData: [] };
     }
 
     const correlation = calculatePearsonCorrelation(pairedData);
 
     if (correlation === null) {
-        return { correlation: null, interpretation: 'Could not calculate correlation.' };
+        return { correlation: null, interpretation: 'Could not calculate correlation.', pairedData };
     }
 
     const direction = correlation > 0 ? 'positive' : correlation < 0 ? 'negative' : 'neutral';
@@ -146,6 +147,7 @@ export async function getCorrelation(input: CorrelationInput): Promise<Correlati
 
     return {
         correlation,
-        interpretation: result
+        interpretation: result,
+        pairedData
     };
 }

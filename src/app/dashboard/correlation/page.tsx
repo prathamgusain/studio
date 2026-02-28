@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { getCorrelation, type CorrelationOutput } from '@/app/actions';
 import { GitMerge, Loader2 } from 'lucide-react';
+import { CorrelationChart } from '@/components/charts/correlation-chart';
 
 type Metric = 'temperature' | 'co2' | 'sea-level' | 'arctic-ice' | 'extreme-weather';
 
@@ -78,6 +79,9 @@ export default function CorrelationPage() {
         }
     };
     
+    const metric1Label = metricOptions.find(m => m.value === metric1)?.label || '';
+    const metric2Label = metricOptions.find(m => m.value === metric2)?.label || '';
+    
     return (
         <div className="flex flex-1 flex-col">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4 no-print">
@@ -90,14 +94,14 @@ export default function CorrelationPage() {
                         <CardHeader>
                             <CardTitle>Analyze Metric Relationships</CardTitle>
                             <CardDescription>
-                                Select two climate metrics to calculate the Pearson correlation coefficient, which measures the linear relationship between them.
+                                Select two climate metrics to calculate the Pearson correlation coefficient and visualize their relationship with a scatter plot.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-muted-foreground">Metric 1</label>
+                                        <label className="text-sm font-medium text-muted-foreground">Metric 1 (X-Axis)</label>
                                         <Select value={metric1} onValueChange={(v) => setMetric1(v as Metric)}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select first metric" />
@@ -110,7 +114,7 @@ export default function CorrelationPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-muted-foreground">Metric 2</label>
+                                        <label className="text-sm font-medium text-muted-foreground">Metric 2 (Y-Axis)</label>
                                         <Select value={metric2} onValueChange={(v) => setMetric2(v as Metric)}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select second metric" />
@@ -128,7 +132,7 @@ export default function CorrelationPage() {
                                     Calculate Correlation
                                 </Button>
                                 {(isCalculating || historicalDataLoading) && (
-                                     <Skeleton className="h-[120px] w-full" />
+                                     <Skeleton className="h-[480px] w-full" />
                                 )}
 
                                 {!isCalculating && !historicalDataLoading && result && (
@@ -136,19 +140,28 @@ export default function CorrelationPage() {
                                          <CardHeader>
                                              <CardTitle className="text-lg">Correlation Result</CardTitle>
                                              <CardDescription>
-                                                 Between {metricOptions.find(m => m.value === metric1)?.label} and {metricOptions.find(m => m.value === metric2)?.label}.
+                                                 Between {metric1Label} and {metric2Label}.
                                              </CardDescription>
                                          </CardHeader>
-                                         <CardContent className="text-center">
-                                            {result.correlation !== null ? (
-                                                <>
-                                                    <p className="text-4xl font-bold font-mono">
-                                                        r = {result.correlation.toFixed(4)}
-                                                    </p>
-                                                    <p className="text-muted-foreground mt-2">{result.interpretation}</p>
-                                                </>
-                                            ) : (
-                                                 <p className="text-muted-foreground">{result.interpretation}</p>
+                                         <CardContent className="space-y-4">
+                                            <div className="text-center">
+                                                {result.correlation !== null ? (
+                                                    <>
+                                                        <p className="text-4xl font-bold font-mono">
+                                                            r = {result.correlation.toFixed(4)}
+                                                        </p>
+                                                        <p className="text-muted-foreground mt-2">{result.interpretation}</p>
+                                                    </>
+                                                ) : (
+                                                     <p className="text-muted-foreground">{result.interpretation}</p>
+                                                )}
+                                            </div>
+                                            {result.pairedData.length > 0 && (
+                                                <CorrelationChart 
+                                                    data={result.pairedData}
+                                                    xLabel={metric1Label}
+                                                    yLabel={metric2Label}
+                                                />
                                             )}
                                          </CardContent>
                                      </Card>
