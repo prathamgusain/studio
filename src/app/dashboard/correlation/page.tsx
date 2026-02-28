@@ -94,7 +94,7 @@ export default function CorrelationPage() {
                         <CardHeader>
                             <CardTitle>Analyze Metric Relationships</CardTitle>
                             <CardDescription>
-                                Select two climate metrics to calculate the Pearson correlation coefficient and visualize their relationship with a scatter plot.
+                                Select two climate metrics to calculate the Pearson correlation coefficient and visualize their relationship with a scatter plot chart.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
